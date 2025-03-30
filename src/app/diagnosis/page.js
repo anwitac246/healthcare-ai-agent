@@ -20,7 +20,6 @@ export default function Diagnosis() {
   const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
 
-
   useEffect(() => {
     async function loadFirebase() {
       try {
@@ -46,7 +45,6 @@ export default function Diagnosis() {
         if (data) {
           const histories = [];
           for (const key in data) {
-     
             if (data[key].summary && data[key].summary.trim() !== '') {
               histories.push({ conversationId: key, ...data[key] });
             }
@@ -153,7 +151,6 @@ export default function Diagnosis() {
   };
 
   const loadChatHistory = (history) => {
-   
     let loadedMessages = [];
     if (history && history.messages) {
       if (Array.isArray(history.messages)) {
@@ -167,45 +164,50 @@ export default function Diagnosis() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <Navbar />
       <div className="flex flex-1 pt-16">
-        <div className="w-1/4 bg-gray-800 p-4 space-y-2 overflow-y-auto">
-          <button
+        {/* Fixed Sidebar */}
+        <div className="fixed top-16 left-0 w-1/4 h-[calc(100vh-4rem)] bg-green-700 p-6 space-y-4 shadow-lg overflow-y-auto">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => startNewChat()}
-            className="w-full p-2 text-left bg-blue-600 text-white rounded-md hover:bg-blue-500 transition"
+            className="w-full p-3 text-left bg-green-800 text-white rounded-lg transition-all"
           >
             + New Chat
-          </button>
+          </motion.button>
           {chatHistories.map((history, index) => (
-            <button
+            <motion.button
               key={index}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => loadChatHistory(history)}
-              className="w-full p-2 text-left bg-gray-700 text-white rounded-md hover:bg-gray-600 transition"
+              className="w-full p-3 text-left bg-green-600 text-white rounded-lg hover:bg-green-500 transition-all border border-green-400"
             >
               {history.summary}
-            </button>
+            </motion.button>
           ))}
         </div>
-        <div className="w-[2px] bg-gray-700"></div>
-        <div className="w-3/4 flex flex-col relative">
-          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
+        {/* Chat Area */}
+        <div className="ml-[25%] w-3/4 flex flex-col relative bg-white shadow-lg">
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 space-y-6 pb-32">
             <AnimatePresence>
               {messages.map((msg, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.4 }}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {msg.role === 'bot' ? (
-                    <div className="p-3 rounded-lg max-w-md bg-gray-700 text-white">
+                    <div className="p-4 rounded-xl max-w-md bg-gray-200 text-black shadow-md">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                     </div>
                   ) : (
-                    <div className="p-3 rounded-lg max-w-md bg-green-500 text-white">
+                    <div className="p-4 rounded-xl max-w-md bg-white text-black border border-green-700 shadow-md">
                       {msg.content}
                     </div>
                   )}
@@ -214,24 +216,34 @@ export default function Diagnosis() {
             </AnimatePresence>
           </div>
           {showScrollButton && (
-            <button onClick={scrollToBottom} className="fixed bottom-24 right-8 bg-green-500 p-2 rounded-full shadow-lg hover:bg-green-400 transition">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              onClick={scrollToBottom}
+              className="fixed bottom-28 right-8 bg-green-500 p-3 rounded-full shadow-xl hover:bg-green-400 transition"
+            >
               <FaArrowDown className="text-white" />
-            </button>
+            </motion.button>
           )}
-          <div className="fixed bottom-0 left-1/4 w-3/4 p-4 bg-gray-800 border-t border-gray-700">
-            <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center">
+          {/* Input Area */}
+          <div className="fixed bottom-0 left-[25%] w-3/4 p-6 bg-green-100 border-t border-green-300 shadow-2xl">
+            <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center space-x-3">
               <TextareaAutosize
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 p-2 bg-gray-700 text-white border border-gray-600 rounded-l-lg resize-none"
+                className="flex-1 p-3 bg-white text-black border border-green-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
                 minRows={1}
                 maxRows={6}
               />
-              <button type="submit" className="bg-green-500 text-white p-3 rounded-r-lg hover:bg-green-400 transition">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                type="submit"
+                className="bg-green-700 text-white p-3 rounded-lg hover:bg-green-600 transition-all"
+              >
                 <FaPaperPlane />
-              </button>
+              </motion.button>
             </form>
           </div>
         </div>
