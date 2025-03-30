@@ -34,6 +34,7 @@ assistant = Assistant(
         "Advice a medicine that would be suitable for pregnant women, old people and children",
         "Also ask what associated diseases someone might have before suggesting a medicine eg: diabetes, epilepsy, asthama, tuberculosis",
         "Make the response polite and upbeat please."
+        "Provide a one liner summary in about 10 words in the following format: SUMMARY: _________"
     ],
     show_tool_calls=True,
 )
@@ -82,7 +83,7 @@ def chat():
     confidence = int(confidence_match.group(1)) if confidence_match else None
 
     # Ensure response is structured for Markdown
-    formatted_output = f"### 🏥 **Diagnosis**\n\n{output}"
+    formatted_output = f"###**Diagnosis**\n\n{output}"
 
     return jsonify({"response": formatted_output, "confidence": confidence})
 
