@@ -20,7 +20,7 @@ export default function Diagnosis() {
   const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Load Firebase configuration on client side
+
   useEffect(() => {
     async function loadFirebase() {
       try {
@@ -38,7 +38,6 @@ export default function Diagnosis() {
     loadFirebase();
   }, []);
 
-  // Fetch previous chats from Firebase
   useEffect(() => {
     if (db) {
       const chatsRef = ref(db, 'chats');
@@ -47,7 +46,7 @@ export default function Diagnosis() {
         if (data) {
           const histories = [];
           for (const key in data) {
-            // Only include chats that have a non-empty summary
+     
             if (data[key].summary && data[key].summary.trim() !== '') {
               histories.push({ conversationId: key, ...data[key] });
             }
