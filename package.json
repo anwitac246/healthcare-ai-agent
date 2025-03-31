@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@hugeicons/react": "^1.0.5",
+    "crypto-js": "^4.2.0",
     "firebase": "^11.5.0",
     "framer-motion": "^12.6.0",
     "lucide-react": "^0.483.0",
