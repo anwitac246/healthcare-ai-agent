@@ -92,7 +92,7 @@ export default function Login() {
           </div>
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-green-700 text-white rounded-md hover:bg-green-800 transition"
+            className="w-full py-2 cursor-pointer px-4 bg-green-700 text-white rounded-md hover:bg-green-800 transition"
           >
             {isSignUp ? 'Sign Up' : 'Login'}
           </button>
@@ -100,7 +100,7 @@ export default function Login() {
         <div className="mt-6 flex items-center justify-center">
           <button
             onClick={handleGoogleLogin}
-            className="flex items-center space-x-2 border border-green-700 text-green-700 py-2 px-4 rounded-md hover:bg-green-100 transition"
+            className="flex cursor-pointer items-center space-x-2 border border-green-700 text-green-700 py-2 px-4 rounded-md hover:bg-green-100 transition"
           >
             <svg className="w-5 h-5" viewBox="0 0 48 48">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.74 1.37 9.23 3.57l6.89-6.89C35.77 4.07 30.18 2 24 2 14.89 2 6.97 6.33 2.65 13.11l7.98 6.2C12.74 12.4 17.78 9.5 24 9.5z"/>
@@ -115,7 +115,7 @@ export default function Login() {
         <div className="mt-6 text-center">
           <p className="text-green-900">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button onClick={() => setIsSignUp(!isSignUp)} className="font-bold hover:underline">
+            <button onClick={() => setIsSignUp(!isSignUp)} className="font-bold cursor-pointer hover:underline">
               {isSignUp ? "Login" : "Sign Up"}
             </button>
           </p>

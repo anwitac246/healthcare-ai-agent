@@ -37,7 +37,6 @@ export default function Diagnosis() {
     return unsubscribe;
   }, [router]);
 
-
   useEffect(() => {
     async function loadFirebase() {
       try {
@@ -56,7 +55,6 @@ export default function Diagnosis() {
     }
     loadFirebase();
   }, [user]);
-
 
   useEffect(() => {
     if (db && user) {
@@ -98,13 +96,11 @@ export default function Diagnosis() {
     }
   };
 
- 
   const extractSummary = (text) => {
     const match = text.match(/SUMMARY:\s*(.*)/);
     return match ? match[1] : null;
   };
 
-  
   const startNewChat = (firebaseDb = db, currentUser = user) => {
     setMessages([]);
     setCurrentChat(null);
@@ -119,31 +115,26 @@ export default function Diagnosis() {
     }
   };
 
-
   const handleSendMessage = async () => {
     if (!input.trim()) return;
     const newUserMessage = { role: 'user', content: input, timestamp: Date.now() };
     setMessages(prev => [...prev, newUserMessage]);
-
     if (db && conversationId && user) {
       push(ref(db, `chats/${user.uid}/${conversationId}/messages`), newUserMessage)
         .then(() => console.log("User message saved"))
         .catch(err => console.error("Error saving user message:", err));
     }
-
     try {
       const response = await axios.post('http://localhost:7000/chat', { message: input });
       const botResponse = response.data.response || 'No response received.';
       const confidence = response.data.confidence || 'N/A';
       const newBotMessage = { role: 'bot', content: `${botResponse}\n\n**Confidence:** ${confidence}%`, timestamp: Date.now() };
       setMessages(prev => [...prev, newBotMessage]);
-
       if (db && conversationId && user) {
         push(ref(db, `chats/${user.uid}/${conversationId}/messages`), newBotMessage)
           .then(() => console.log("Bot message saved"))
           .catch(err => console.error("Error saving bot message:", err));
       }
-
       if (!currentChat) {
         const summary = extractSummary(botResponse);
         if (summary) {
@@ -157,11 +148,16 @@ export default function Diagnosis() {
           }
         }
       } else {
-    
-        setCurrentChat(prev => ({
-          ...prev,
-          messages: [...prev.messages, newUserMessage, newBotMessage],
-        }));
+        setCurrentChat(prev => {
+  let prevMessages = [];
+  if (prev) {
+    prevMessages = Array.isArray(prev.messages)
+      ? prev.messages
+      : Object.values(prev.messages || {});
+  }
+  return { ...prev, messages: [...prevMessages, newUserMessage, newBotMessage] };
+});
+
       }
     } catch (error) {
       const errorMsg = { role: 'bot', content: '**Error:** Unable to communicate with the server.', timestamp: Date.now() };
@@ -172,7 +168,6 @@ export default function Diagnosis() {
           .catch(err => console.error("Error saving error message:", err));
       }
     }
-
     setInput('');
     setTimeout(scrollToBottom, 100);
     inputRef.current?.focus();
@@ -196,7 +191,6 @@ export default function Diagnosis() {
     <div className="min-h-screen bg-white text-green-800 flex flex-col">
       <Navbar />
       <div className="flex flex-1 pt-16 relative">
-      
         <motion.div
           className="fixed top-20 left-0 z-20"
           initial={{ x: -250 }}
@@ -213,7 +207,6 @@ export default function Diagnosis() {
                 <FaTimes size={20} />
               </button>
             </div>
-    
             <button
               onClick={() => startNewChat()}
               className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500 text-white hover:bg-green-600 transition mb-4 mx-auto shadow"
@@ -233,7 +226,6 @@ export default function Diagnosis() {
             </div>
           </div>
         </motion.div>
-  
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
@@ -242,7 +234,6 @@ export default function Diagnosis() {
             <FaBars size={20} />
           </button>
         )}
-
         <div className="flex-1 flex flex-col relative border-l border-green-300 ml-[250px]">
           <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 pb-24">
             <AnimatePresence>
