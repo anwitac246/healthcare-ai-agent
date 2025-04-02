@@ -26,27 +26,27 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 w-full bg-white/5 z-50 backdrop-blur-sm shadow-lg p-4 flex justify-between items-center flex-wrap border-b border-white/20">
-      <h1 className="text-3xl font-bold text-green-400 cursor-pointer font-mono">
+      <h1 className="text-3xl font-bold text-[#006A71] cursor-pointer font-mono">
         <Link href="/">AetherCare</Link>
       </h1>
       <button
-        className="md:hidden text-white cursor-pointer mx-4"
+        className="md:hidden text-[#006A71] cursor-pointer mx-4"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <X size={32} /> : <Menu size={32} />}
       </button>
       <div className="max-sm:hidden md:flex justify-between items-center space-x-6">
         <ul className="flex space-x-6">
-          <li className="text-white hover:text-green-300 cursor-pointer transition font-mono">
+          <li className="text-[#006A71] hover:text-[#000000] cursor-pointer transition font-mono">
             <Link href="/">Home</Link>
           </li>
-          <li className="text-white hover:text-green-300 cursor-pointer transition font-mono">
+          <li className="text-[#006A71] hover:text-[#000000] cursor-pointer transition font-mono">
             <Link href="/diagnosis">Diagnosis</Link>
           </li>
-          <li className="text-white hover:text-green-300 cursor-pointer transition font-mono">
+          <li className="text-[#006A71] hover:text-[#000000] cursor-pointer transition font-mono">
             <Link href="/about">About</Link>
           </li>
-          <li className="text-white hover:text-green-300 cursor-pointer transition font-mono">
+          <li className="text-[#006A71] hover:text-[#000000] cursor-pointer transition font-mono">
             <Link href="/contact">Contact</Link>
           </li>
         </ul>
@@ -55,29 +55,29 @@ export default function Navbar() {
         {currentUser ? (
           <button
             onClick={handleLogout}
-            className="bg-white/20 text-green-400 px-4 py-2 rounded-lg cursor-pointer font-mono shadow-md hover:bg-white/30 transition"
+            className="bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-2 rounded-lg cursor-pointer font-mono shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition"
           >
             Logout
           </button>
         ) : (
-          <button className="bg-white/20 text-green-400 px-4 py-2 rounded-lg cursor-pointer font-mono shadow-md hover:bg-white/30 transition">
+          <button className="bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-2 rounded-lg cursor-pointer font-mono shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition">
             <Link href="/login">Login</Link>
           </button>
         )}
       </div>
       {isOpen && (
-        <div className="md:hidden absolute top-16 left-0 w-full backdrop-blur-lg p-6 shadow-lg border-t">
+        <div className="md:hidden absolute top-16 left-0 w-full backdrop-blur-lg p-6 shadow-lg border-t border-white/20">
           <ul className="flex flex-col items-center space-y-4">
-            <li className="text-white text-lg cursor-pointer font-mono" onClick={() => setIsOpen(false)}>
+            <li className="text-[#006A71] text-lg cursor-pointer font-mono" onClick={() => setIsOpen(false)}>
               <Link href="/">Home</Link>
             </li>
-            <li className="text-white text-lg cursor-pointer font-mono" onClick={() => setIsOpen(false)}>
+            <li className="text-[#006A71] text-lg cursor-pointer font-mono" onClick={() => setIsOpen(false)}>
               <Link href="/diagnosis">Diagnosis</Link>
             </li>
-            <li className="text-white text-lg cursor-pointer font-mono" onClick={() => setIsOpen(false)}>
+            <li className="text-[#006A71] text-lg cursor-pointer font-mono" onClick={() => setIsOpen(false)}>
               <Link href="/about">About</Link>
             </li>
-            <li className="text-white text-lg cursor-pointer font-mono" onClick={() => setIsOpen(false)}>
+            <li className="text-[#006A71] text-lg cursor-pointer font-mono" onClick={() => setIsOpen(false)}>
               <Link href="/contact">Contact</Link>
             </li>
           </ul>
@@ -88,14 +88,14 @@ export default function Navbar() {
                   setIsOpen(false);
                   handleLogout();
                 }}
-                className="bg-white/20 text-green-400 px-4 py-2 rounded-lg cursor-pointer w-full font-mono shadow-md hover:bg-white/30 transition"
+                className="w-full bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-2 rounded-lg cursor-pointer font-mono shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition"
               >
                 Logout
               </button>
             ) : (
               <button
                 onClick={() => setIsOpen(false)}
-                className="bg-white/20 text-green-400 px-4 py-2 rounded-lg cursor-pointer w-full font-mono shadow-md hover:bg-white/30 transition"
+                className="w-full bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-2 rounded-lg cursor-pointer font-mono shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition"
               >
                 <Link href="/login">Login</Link>
               </button>

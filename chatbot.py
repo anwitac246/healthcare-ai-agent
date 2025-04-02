@@ -79,7 +79,7 @@ def chat():
     confidence_match = re.search(r"Confidence:\s*(\d+)%", output)
     confidence = int(confidence_match.group(1)) if confidence_match else None
 
-    formatted_output = f"###**Diagnosis**\n\n{output}"
+    formatted_output = f"**Diagnosis**\n\n{output}"
 
     return jsonify({"response": formatted_output, "confidence": confidence})
 

@@ -13,6 +13,7 @@
     "crypto-js": "^4.2.0",
     "firebase": "^11.5.0",
     "framer-motion": "^12.6.0",
+    "jspdf": "^3.0.1",
     "lucide-react": "^0.483.0",
     "next": "15.2.4",
     "react": "^19.0.0",

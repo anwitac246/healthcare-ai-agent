@@ -1,3 +1,4 @@
+'use client';
 import React, { useEffect, useState } from 'react';
 import { Typewriter } from 'react-simple-typewriter';
 import { motion } from 'framer-motion';
@@ -16,65 +17,65 @@ export default function Homepage() {
         <div 
             className="min-h-screen flex flex-col items-center justify-center text-center px-6 relative overflow-hidden"
             style={{
-                background: `linear-gradient(120deg, rgb(0, 0, 0) ${scrollY * 0.1}%, rgb(34, 197, 94) ${100 - scrollY * 0.1}%)`,
+                // Fixed backdrop using your color palette:
+                background: 'linear-gradient(120deg, #F2EFE7, #9ACBD0, #48A6A7, #006A71)',
                 transition: 'background 0.5s ease-in-out',
             }}
         >
-            
             <motion.div 
-                className="absolute inset-0 bg-gradient-to-br from-[#FFFFFF] via-[#0a1302] to-[#FFFFFF] opacity-50"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+                className="absolute inset-0 bg-gradient-to-br from-transparent via-[#48A6A7] to-transparent opacity-40"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
             />
 
-           
             <motion.h1 
-                className="text-4xl md:text-5xl font-extrabold text-white relative z-10"
-                initial={{ opacity: 0, y: -20 }}
+                className="text-4xl md:text-6xl font-extrabold text-[#006A71] relative z-10"
+                initial={{ opacity: 0, y: -30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1 }}
             >
                 Welcome to{' '}
-                <span className="text-green-400 font-mono">
+                <span className="text-[#006A71] font-mono">
                     <Typewriter words={['AetherCare']} loop={false} cursor cursorStyle="|" delaySpeed={3000} />
                 </span>
                 , your trusted AI-powered health companion.
             </motion.h1>
 
             <motion.p 
-                className="text-lg text-gray-300 mt-4 max-w-2xl relative z-10"
-                initial={{ opacity: 0, y: 20 }}
+                className="text-lg md:text-xl text-[#006A71] mt-6 max-w-2xl relative z-10"
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 0.5 }}
             >
-                We're here to help you navigate your symptoms and provide insights into your health—all at the click of a button.
+                We're here to guide you through your symptoms and provide insightful diagnosis and advice, all at your fingertips.
             </motion.p>
 
-            
             <motion.div 
-                className="mt-8 flex flex-col md:flex-row gap-4 relative z-10"
-                initial={{ opacity: 0, y: 20 }}
+                className="mt-8 flex flex-col md:flex-row gap-6 relative z-10"
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 1 }}
             >
-                <div className="flex md:flex-row flex-wrap justify-between m-4 max-sm:flex-col">
-                <button className="px-6 py-3 m-4 cursor-pointer text-lg font-mono rounded-full  text-white  shadow-lg hover:bg-green-600 transition duration-300 hover:scale-105 hover:shadow-xl">
-                <Link href="/diagnosis">Get Diagnosis</Link>
-                </button>
-                <button className="px-6 py-3 m-4 cursor-pointer text-lg font-mono rounded-full  text-white shadow-lg hover:bg-green-600 transition duration-300 hover:scale-105 hover:shadow-xl">
-                <Link href="/about">Learn More</Link>
-                </button>
-                <button className="px-6 py-3 m-4 cursor-pointer text-lg font-mono rounded-full text-white shadow-lg hover:bg-green-600 transition duration-300 hover:scale-105 hover:shadow-xl">
-                    Order Medicines
-                </button>
+                <div className="flex flex-wrap justify-center gap-4">
+                    <Link href="/diagnosis">
+                        <button className="px-8 py-4 text-lg font-mono rounded-full text-white bg-gradient-to-r from-[#006A71] to-[#48A6A7] shadow-lg hover:from-[#006A71] hover:to-[#9ACBD0] transition transform hover:scale-105">
+                            Get Diagnosis
+                        </button>
+                    </Link>
+                    <Link href="/about">
+                        <button className="px-8 py-4 text-lg font-mono rounded-full text-white bg-gradient-to-r from-[#48A6A7] to-[#9ACBD0] shadow-lg hover:from-[#48A6A7] hover:to-[#006A71] transition transform hover:scale-105">
+                            Learn More
+                        </button>
+                    </Link>
+                    <button className="px-8 py-4 text-lg font-mono rounded-full text-white bg-gradient-to-r from-[#9ACBD0] to-[#006A71] shadow-lg hover:from-[#9ACBD0] hover:to-[#48A6A7] transition transform hover:scale-105">
+                        Order Medicines
+                    </button>
                 </div>
-                
             </motion.div>
 
-            
             <motion.div 
-                className="absolute bottom-10 w-16 h-16 bg-green-600 rounded-full opacity-50"
-                animate={{ y: [0, 10, 0] }}
+                className="absolute bottom-10 w-16 h-16 bg-[#006A71] rounded-full opacity-50"
+                animate={{ y: [0, 15, 0] }}
                 transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
             />
         </div>
