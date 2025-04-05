@@ -62,9 +62,9 @@ export default function Homepage() {
                             Get Diagnosis
                         </button>
                     </Link>
-                    <Link href="/about">
+                    <Link href="/location_docs">
                         <button className="px-8 py-4 text-lg font-mono rounded-full text-white bg-gradient-to-r from-[#48A6A7] to-[#9ACBD0] shadow-lg hover:from-[#48A6A7] hover:to-[#006A71] transition transform hover:scale-105">
-                            Learn More
+                            Search Doctors
                         </button>
                     </Link>
                     <button className="px-8 py-4 text-lg font-mono rounded-full text-white bg-gradient-to-r from-[#9ACBD0] to-[#006A71] shadow-lg hover:from-[#9ACBD0] hover:to-[#48A6A7] transition transform hover:scale-105">
