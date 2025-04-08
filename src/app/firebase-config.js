@@ -2,7 +2,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyDjxRG08W3pWSqdy9MJfXh_7MjIwGfdODA",
   authDomain: "ai-healthcare-agent.firebaseapp.com",
   databaseURL: "https://ai-healthcare-agent-default-rtdb.asia-southeast1.firebasedatabase.app/",

@@ -53,12 +53,21 @@ export default function Navbar() {
       </div>
       <div className="max-sm:hidden md:flex space-x-4">
         {currentUser ? (
+          <div>
+
+          <button
+          
+          className="bg-gradient-to-r from-[#9ACBD0] mx-4 to-[#48A6A7] text-[#F2EFE7] px-4 py-2 rounded-lg cursor-pointer font-mono shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition"
+        >
+          <Link href="/profile">Profile</Link>
+        </button>
           <button
             onClick={handleLogout}
             className="bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-2 rounded-lg cursor-pointer font-mono shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition"
           >
             Logout
           </button>
+          </div>
         ) : (
           <button className="bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-2 rounded-lg cursor-pointer font-mono shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition">
             <Link href="/login">Login</Link>

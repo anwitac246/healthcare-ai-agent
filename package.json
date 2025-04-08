@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@hugeicons/react": "^1.0.5",
+    "axios": "^1.8.4",
     "crypto-js": "^4.2.0",
     "firebase": "^11.5.0",
     "framer-motion": "^12.6.0",
@@ -23,6 +24,7 @@
     "react-simple-typewriter": "^5.0.1",
     "react-textarea-autosize": "^8.5.8",
     "remark-gfm": "^4.0.1"
+    
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

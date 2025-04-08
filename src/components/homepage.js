@@ -58,16 +58,21 @@ export default function Homepage() {
             >
                 <div className="flex flex-wrap justify-center gap-4">
                     <Link href="/diagnosis">
-                        <button className="px-8 py-4 text-lg font-mono rounded-full text-white bg-gradient-to-r from-[#006A71] to-[#48A6A7] shadow-lg hover:from-[#006A71] hover:to-[#9ACBD0] transition transform hover:scale-105">
+                        <button className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#006A71] to-[#48A6A7] shadow-lg hover:from-[#006A71] hover:to-[#9ACBD0] transition transform hover:scale-105">
                             Get Diagnosis
                         </button>
                     </Link>
                     <Link href="/location_docs">
-                        <button className="px-8 py-4 text-lg font-mono rounded-full text-white bg-gradient-to-r from-[#48A6A7] to-[#9ACBD0] shadow-lg hover:from-[#48A6A7] hover:to-[#006A71] transition transform hover:scale-105">
+                        <button className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#48A6A7] to-[#9ACBD0] shadow-lg hover:from-[#48A6A7] hover:to-[#006A71] transition transform hover:scale-105">
                             Search Doctors
                         </button>
                     </Link>
-                    <button className="px-8 py-4 text-lg font-mono rounded-full text-white bg-gradient-to-r from-[#9ACBD0] to-[#006A71] shadow-lg hover:from-[#9ACBD0] hover:to-[#48A6A7] transition transform hover:scale-105">
+                    <Link href="/appointment">
+                        <button className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#48A6A7] to-[#9ACBD0] shadow-lg hover:from-[#48A6A7] hover:to-[#006A71] transition transform hover:scale-105">
+                            Consultation
+                        </button>
+                    </Link>
+                    <button className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#9ACBD0] to-[#006A71] shadow-lg hover:from-[#9ACBD0] hover:to-[#48A6A7] transition transform hover:scale-105">
                         Order Medicines
                     </button>
                 </div>

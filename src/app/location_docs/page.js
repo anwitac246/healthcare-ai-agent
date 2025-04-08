@@ -4,6 +4,20 @@ import { useEffect, useState, useRef } from "react";
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
+// Dynamically load the Google Maps script if it hasn't been loaded already.
+function loadGoogleMapsScript(callback) {
+  if (typeof window.google === "object" && typeof window.google.maps === "object") {
+    callback();
+  } else {
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}`;
+    script.async = true;
+    script.defer = true;
+    script.onload = callback;
+    document.head.appendChild(script);
+  }
+}
+
 export default function NearbyDoctors() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,23 +29,31 @@ export default function NearbyDoctors() {
   const mapContainerRef = useRef(null);
   const [map, setMap] = useState(null);
   const directionsRendererRef = useRef(null);
+  const markersRef = useRef([]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.google && mapContainerRef.current && !map) {
-      const mapObj = new google.maps.Map(mapContainerRef.current, {
-        zoom: 12,
-        center: { lat: 28.6139, lng: 77.209 },
-      });
-      setMap(mapObj);
-    }
-  }, [map, mapContainerRef]);
+    loadGoogleMapsScript(() => {
+      if (mapContainerRef.current && !map) {
+        const mapObj = new window.google.maps.Map(mapContainerRef.current, {
+          zoom: 12,
+          center: { lat: 28.6139, lng: 77.209 },
+        });
+        setMap(mapObj);
+      }
+    });
+  }, [map]);
 
   useEffect(() => {
-
     if (map) {
-      google.maps.event.trigger(map, "resize");
+      window.google.maps.event.trigger(map, "resize");
     }
   }, [map]);
+
+  // Remove previously added markers from the map.
+  const clearMarkers = () => {
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
+  };
 
   const fetchDoctors = (lat, lng, text = "") => {
     setLoading(true);
@@ -60,9 +82,15 @@ export default function NearbyDoctors() {
 
   const handleSearch = () => {
     setSelectedDoctor(null);
+    setEta("");
+    clearMarkers();
     if (useManual && manualLocation.trim()) {
       fetchDoctors(null, null, manualLocation);
     } else {
+      if (!navigator.geolocation) {
+        setError("Geolocation is not supported by this browser.");
+        return;
+      }
       navigator.geolocation.getCurrentPosition(
         (pos) => fetchDoctors(pos.coords.latitude, pos.coords.longitude),
         () => setError("Location access denied.")
@@ -72,26 +100,39 @@ export default function NearbyDoctors() {
 
   const showOnMap = (doctor) => {
     setSelectedDoctor(doctor);
+    setEta("");
     if (!map) return;
+    
+    // Clear previous markers and directions.
+    clearMarkers();
+    if (directionsRendererRef.current) {
+      directionsRendererRef.current.setMap(null);
+      directionsRendererRef.current = null;
+    }
 
-    const doctorLoc = new google.maps.LatLng(doctor.location.lat, doctor.location.lng);
+    const doctorLoc = new window.google.maps.LatLng(doctor.location.lat, doctor.location.lng);
     map.setCenter(doctorLoc);
 
-
-    new google.maps.Marker({
+    // Add a marker for the selected doctor.
+    const marker = new window.google.maps.Marker({
       position: doctorLoc,
       map,
       title: doctor.name,
     });
+    markersRef.current.push(marker);
 
-    const directionsService = new google.maps.DirectionsService();
-    if (!directionsRendererRef.current) {
-      directionsRendererRef.current = new google.maps.DirectionsRenderer({
-        suppressMarkers: true,
-      });
-    }
+    // Initialize and set up the directions renderer.
+    const directionsService = new window.google.maps.DirectionsService();
+    directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
+      suppressMarkers: true,
+    });
     directionsRendererRef.current.setMap(map);
 
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by this browser.");
+      return;
+    }
+    // Get the latest user location before fetching directions.
     navigator.geolocation.getCurrentPosition((pos) => {
       const origin = {
         lat: pos.coords.latitude,
@@ -106,10 +147,10 @@ export default function NearbyDoctors() {
         {
           origin,
           destination,
-          travelMode: google.maps.TravelMode.DRIVING,
+          travelMode: window.google.maps.TravelMode.DRIVING,
         },
         (result, status) => {
-          if (status === google.maps.DirectionsStatus.OK) {
+          if (status === window.google.maps.DirectionsStatus.OK) {
             directionsRendererRef.current.setDirections(result);
             const leg = result.routes[0].legs[0];
             setEta(leg.duration.text);
@@ -124,7 +165,7 @@ export default function NearbyDoctors() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#e0f7fa] to-[#f1f8e9] px-6 py-10">
-        <Navbar/>
+      <Navbar />
       <div className="max-w-6xl mx-auto my-30">
         <h1 className="text-5xl font-extrabold text-center text-[#004d40] mb-10 drop-shadow">
           Find Nearby Doctors
@@ -157,7 +198,7 @@ export default function NearbyDoctors() {
             placeholder="Enter a location (e.g., Mumbai)"
             value={manualLocation}
             onChange={(e) => setManualLocation(e.target.value)}
-            className="w-full max-w-xl mx-auto border border-gray-300 px-5 py-3 rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-[#004d40] mb-6"
+            className="w-full text-[#004d40] max-w-xl mx-auto border border-gray-300 px-5 py-3 rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-[#004d40] mb-6"
           />
         )}
 
@@ -196,7 +237,6 @@ export default function NearbyDoctors() {
             </div>
           ))}
         </div>
-
 
         <div className="mt-14">
           <h3 className="text-2xl font-bold mb-4 text-[#004d40]">

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { ref, set } from 'firebase/database';
+import { ref, set, update } from 'firebase/database';
 import { app, db } from '../firebase-config';
 import SHA256 from 'crypto-js/sha256';
 import Navbar from '@/components/navbar';
@@ -10,9 +10,10 @@ import Navbar from '@/components/navbar';
 export default function Login() {
   const router = useRouter();
   const [isSignUp, setIsSignUp] = useState(false);
-  const [needDOB, setNeedDOB] = useState(false);
+  const [needExtraInfo, setNeedExtraInfo] = useState(false);
   const [name, setName] = useState('');
   const [dob, setDob] = useState('');
+  const [role, setRole] = useState('patient');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -30,9 +31,10 @@ export default function Login() {
         const user = userCredential.user;
         await set(ref(db, `users/${user.uid}`), {
           name: name,
-          dob: dob,
+          dob: dob || null,
           email: user.email,
           password: hashedPassword,
+          role: role, // Store the selected role
           createdAt: new Date().toISOString()
         });
       } else {
@@ -49,66 +51,99 @@ export default function Login() {
     try {
       const userCredential = await signInWithPopup(auth, googleProvider);
       const user = userCredential.user;
-      // Store initial user details without DOB (Google doesn't provide DOB by default)
-      await set(ref(db, `users/${user.uid}`), {
-        name: user.displayName,
-        email: user.email,
-        createdAt: new Date().toISOString()
-      });
-      // Set state and prompt user for DOB
+      // Check if this user already exists in Firebase
+      const userRef = ref(db, `users/${user.uid}`);
+      // In a real app you would fetch and check data from Firebase here.
+      // For simplicity, we assume that if no DOB is present, it's a new user.
+      // We'll prompt for extra info (DOB and role) if needed.
+      // Here we simply set needExtraInfo to true.
       setName(user.displayName);
       setEmail(user.email);
-      setNeedDOB(true);
+      setNeedExtraInfo(true);
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const handleDOBSubmit = async (e) => {
+  const handleExtraInfoSubmit = async (e) => {
     e.preventDefault();
     if (!dob) {
       setError("Please enter your date of birth.");
       return;
     }
     try {
-      const auth = getAuth(app);
       const user = auth.currentUser;
-      await set(ref(db, `users/${user.uid}/dob`), dob);
+      // Update the user's record with DOB and role if missing
+      await update(ref(db, `users/${user.uid}`), {
+        dob,
+        role
+      });
       router.push('/diagnosis');
     } catch (err) {
       setError(err.message);
     }
   };
 
-  if (needDOB) {
+  if (needExtraInfo) {
     return (
       <div className="min-h-screen bg-[#F2EFE7] flex flex-col">
         <Navbar />
         <div className="flex items-center justify-center flex-1">
           <div className="bg-white shadow-2xl rounded-lg p-8 max-w-md w-full">
             <h2 className="text-3xl font-bold mb-6 text-center" style={{ color: "#006A71" }}>
-              Enter Your Date of Birth
+              Complete Your Profile
             </h2>
             {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-            <form onSubmit={handleDOBSubmit} className="space-y-4">
+            <form onSubmit={handleExtraInfoSubmit} className="space-y-4">
               <div>
-                <label htmlFor="dob" className="block font-semibold" style={{ color: "#006A71" }}>Date of Birth</label>
+                <label htmlFor="dob" className="block font-semibold" style={{ color: "#006A71" }}>
+                  Date of Birth
+                </label>
                 <input
                   type="date"
                   id="dob"
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
-                  className="mt-1 w-full p-2 border rounded-md focus:outline-none focus:ring-2"
+                  className="mt-1 w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006A71]"
                   style={{ borderColor: "#9ACBD0" }}
                   required
                 />
               </div>
+              <div>
+                <label className="block font-semibold mb-1" style={{ color: "#006A71" }}>
+                  I am a
+                </label>
+                <div className="flex space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="patient"
+                      checked={role === "patient"}
+                      onChange={(e) => setRole(e.target.value)}
+                      className="form-radio text-[#006A71]"
+                    />
+                    <span className="ml-2 text-[#006A71]">Patient</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="doctor"
+                      checked={role === "doctor"}
+                      onChange={(e) => setRole(e.target.value)}
+                      className="form-radio text-[#006A71]"
+                    />
+                    <span className="ml-2 text-[#006A71]">Doctor</span>
+                  </label>
+                </div>
+              </div>
               <button
                 type="submit"
                 className="w-full py-2 px-4 rounded-md transition cursor-pointer"
-                style={{ backgroundColor: "#006A71", color: "#F2EFE7" }} 
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#48A6A7"}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#006A71"}
+                style={{ backgroundColor: "#006A71", color: "#F2EFE7" }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#48A6A7")}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#006A71")}
               >
                 Submit
               </button>
@@ -132,25 +167,58 @@ export default function Login() {
             {isSignUp && (
               <>
                 <div>
-                  <label htmlFor="name" className="block font-semibold" style={{ color: "#006A71" }}>Name</label>
+                  <label htmlFor="name" className="block font-semibold" style={{ color: "#006A71" }}>
+                    Name
+                  </label>
                   <input
                     type="text"
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="mt-1 w-full p-2 border rounded-md focus:outline-none focus:ring-2"
+                    className="mt-1 w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006A71]"
                     style={{ borderColor: "#9ACBD0" }}
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="dob" className="block font-semibold" style={{ color: "#006A71" }}>Date of Birth</label>
+                  <label className="block font-semibold mb-1" style={{ color: "#006A71" }}>
+                    I am a
+                  </label>
+                  <div className="flex space-x-4">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="role"
+                        value="patient"
+                        checked={role === "patient"}
+                        onChange={(e) => setRole(e.target.value)}
+                        className="form-radio text-[#006A71]"
+                      />
+                      <span className="ml-2">Patient</span>
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="role"
+                        value="doctor"
+                        checked={role === "doctor"}
+                        onChange={(e) => setRole(e.target.value)}
+                        className="form-radio text-[#006A71]"
+                      />
+                      <span className="ml-2 text-[#006A71]">Doctor</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="dob" className="block font-semibold" style={{ color: "#006A71" }}>
+                    Date of Birth
+                  </label>
                   <input
                     type="date"
                     id="dob"
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
-                    className="mt-1 w-full p-2 border rounded-md focus:outline-none focus:ring-2"
+                    className="mt-1 w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006A71]"
                     style={{ borderColor: "#9ACBD0" }}
                     required
                   />
@@ -158,25 +226,29 @@ export default function Login() {
               </>
             )}
             <div>
-              <label htmlFor="email" className="block font-semibold" style={{ color: "#006A71" }}>Email</label>
+              <label htmlFor="email" className="block font-semibold" style={{ color: "#006A71" }}>
+                Email
+              </label>
               <input
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full p-2 border rounded-md focus:outline-none focus:ring-2"
+                className="mt-1 w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006A71]"
                 style={{ borderColor: "#9ACBD0" }}
                 required
               />
             </div>
             <div>
-              <label htmlFor="password" className="block font-semibold" style={{ color: "#006A71" }}>Password</label>
+              <label htmlFor="password" className="block font-semibold" style={{ color: "#006A71" }}>
+                Password
+              </label>
               <input
                 type="password"
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full p-2 border rounded-md focus:outline-none focus:ring-2"
+                className="mt-1 w-full text-[#006A71] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006A71]"
                 style={{ borderColor: "#9ACBD0" }}
                 required
               />
@@ -184,17 +256,17 @@ export default function Login() {
             <button
               type="submit"
               className="w-full py-2 px-4 rounded-md transition cursor-pointer"
-              style={{ backgroundColor: "#006A71", color: "#F2EFE7" }} 
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#48A6A7"}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#006A71"}
+              style={{ backgroundColor: "#006A71", color: "#F2EFE7" }}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#48A6A7")}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#006A71")}
             >
               {isSignUp ? 'Sign Up' : 'Login'}
             </button>
           </form>
-          <div className="mt-6 flex items-center justify-center">
+          <div className="mt-6 text-center">
             <button
               onClick={handleGoogleLogin}
-              className="flex items-center space-x-2 border py-2 px-4 rounded-md transition cursor-pointer"
+              className="flex items-center justify-center space-x-2 border py-2 px-4 rounded-md transition cursor-pointer"
               style={{ borderColor: "#006A71", color: "#006A71" }}
               onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#F2EFE7"}
             >
@@ -207,10 +279,11 @@ export default function Login() {
               </svg>
               <span>Sign in with Google</span>
             </button>
-          </div>
-          <div className="mt-6 text-center">
-            <p style={{ color: "#006A71" }}>
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}<button onClick={() => setIsSignUp(!isSignUp)} className="font-bold cursor-pointer hover:underline" style={{ color: "#48A6A7" }}>{isSignUp ? "Login" : "Sign Up"}</button>
+            <p style={{ color: "#006A71" }} className="mt-4">
+              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+              <button onClick={() => setIsSignUp(!isSignUp)} className="font-bold cursor-pointer hover:underline" style={{ color: "#48A6A7" }}>
+                {isSignUp ? "Login" : "Sign Up"}
+              </button>
             </p>
           </div>
         </div>
