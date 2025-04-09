@@ -1,4 +1,4 @@
-// components/DoctorProfile.js
+
 'use client'
 import React, { useEffect, useState } from 'react'
 import Navbar from '@/components/navbar'
@@ -11,7 +11,6 @@ export default function DoctorProfile() {
   const [userId, setUserId] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // 1) Watch auth state to get current user’s UID
   useEffect(() => {
     const auth = getAuth(app)
     const unsub = onAuthStateChanged(auth, user => {
@@ -25,8 +24,6 @@ export default function DoctorProfile() {
     return () => unsub()
   }, [])
 
-  // 2) Once we have userId, subscribe to appointments and filter
-  // 2) Once we have userId, subscribe to appointments and filter + sort
 useEffect(() => {
     if (!userId) return
     const appointmentsRef = ref(db, 'appointments')
@@ -35,7 +32,7 @@ useEffect(() => {
       const all = Object.entries(data).map(([id, val]) => ({ id, ...val }))
       const doctorAppointments = all
         .filter(appt => appt.doctorId === userId)
-        .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime)) // Sort newest first
+        .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime)) 
       setAppointments(doctorAppointments)
     })
     return () => unsub()

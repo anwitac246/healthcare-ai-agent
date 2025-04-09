@@ -8,8 +8,12 @@ load_dotenv(".env.local")
 app = Flask(__name__)
 CORS(app)
 
+
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
+@app.route('/')
+def home():
+    return "Welcome to the location API."
 @app.route('/nearby-doctors', methods=['POST'])
 def get_nearby_doctors():
     data = request.get_json()
@@ -22,7 +26,7 @@ def get_nearby_doctors():
             
             url = (
                 f'https://maps.googleapis.com/maps/api/place/textsearch/json'
-                f'?query=doctors+in+{text}&key={GOOGLE_MAPS_API_KEY}'
+                f'?query=doctors+and+hospitals+in+{text}&key={GOOGLE_MAPS_API_KEY}'
             )
         elif lat and lng:
          

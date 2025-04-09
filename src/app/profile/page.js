@@ -79,103 +79,100 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-[#006A71]">
-      <Navbar />
-    
-      <header className="py-20 text-center">
-        <h1 className="text-5xl font-bold text-black">Dashboard</h1>
-        <p className="mt-4 text-xl text-black">
-          Your personalized dashboard for medical insights and diagnosis history.
-        </p>
-      </header>
-      <main className="max-w-4xl mx-auto px-6 py-8 space-y-10">
-        
-        <section className="bg-white shadow-lg border border-black rounded-lg p-8">
-          {isEditing ? (
-            <div className="space-y-4">
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Your Name"
-                className="w-full p-3 border border-[#006A71] rounded-md focus:outline-none focus:ring-2 focus:ring-[#006A71]"
-              />
-              <input
-                type="date"
-                name="dob"
-                value={formData.dob}
-                onChange={handleChange}
-                className="w-full p-3 border border-[#006A71] rounded-md focus:outline-none focus:ring-2 focus:ring-[#006A71]"
-              />
-              <textarea
-                name="about"
-                value={formData.about}
-                onChange={handleChange}
-                placeholder="Tell us about yourself"
-                rows={4}
-                className="w-full p-3 border border-[#006A71] rounded-md focus:outline-none focus:ring-2 focus:ring-[#006A71]"
-              ></textarea>
-              <button
-                onClick={handleSave}
-                className="px-6 py-3 bg-[#006A71] text-white font-bold rounded-md hover:bg-black transition"
-              >
-                Save
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3 text-black">
-              <h2 className="text-4xl font-bold">{userData.name}</h2>
-              <p className="text-lg">
-                <span className="font-semibold">Email:</span> {userData.email}
-              </p>
-              <p className="text-lg">
-                <span className="font-semibold">Date of Birth:</span> {userData.dob}
-              </p>
-              <p className="text-lg">
-                <span className="font-semibold">Age:</span> {userData.age} years
-              </p>
-              <p className="text-lg">
-                <span className="font-semibold">About Me:</span> {userData.about || "Not provided"}
-              </p>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="mt-4 px-6 py-3 bg-[#006A71] text-white font-bold rounded-md hover:bg-black transition"
-              >
-                Edit Profile
-              </button>
-            </div>
-          )}
-        </section>
-     
-        <section className="bg-white shadow-lg border border-black rounded-lg p-8">
-          <h3 className="text-3xl font-bold text-[#006A71] mb-4">About Me</h3>
-          <p className="text-lg text-black">
-            {userData.about || "No additional information provided."}
-          </p>
-        </section>
-       
-        <section className="bg-white shadow-lg border border-black rounded-lg p-8">
-          <h3 className="text-3xl font-bold text-[#006A71] mb-4">My Diagnosis History</h3>
-          <p className="text-lg text-black mb-6">
-            Explore your previous diagnosis records and detailed insights.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <Link href="/diagnosis">
-              <div className="cursor-pointer bg-[#006A71] text-white p-6 rounded-md shadow-md hover:bg-black transition">
-                <h4 className="text-2xl font-bold mb-2">View Diagnoses</h4>
-                <p className="text-lg">Check your latest and past medical insights.</p>
-              </div>
-            </Link>
-            <Link href="/reports">
-              <div className="cursor-pointer bg-[#006A71] text-white p-6 rounded-md shadow-md hover:bg-black transition">
-                <h4 className="text-2xl font-bold mb-2">Download Reports</h4>
-                <p className="text-lg">Access your detailed diagnosis reports.</p>
-              </div>
-            </Link>
+    <div className="min-h-screen bg-gradient-to-tr from-white to-[#e0f7fa] font-sans">
+  <Navbar />
+
+  <header className="py-16 text-center bg-[#006A71] text-white shadow-xl">
+    <h1 className="text-5xl font-extrabold drop-shadow-sm my-10">Profile Dashboard</h1>
+    <p className="mt-3 text-lg font-medium opacity-90">
+      Personalized insights and medical history at your fingertips.
+    </p>
+  </header>
+
+  <main className="max-w-5xl mx-auto px-6 py-10 space-y-12">
+    <section className="relative bg-white/80 backdrop-blur-md border border-[#006A71]/40 rounded-3xl shadow-xl p-8 transition-transform hover:scale-[1.01]">
+      <h2 className="text-3xl font-bold text-[#006A71] mb-6">Your Information</h2>
+
+      {isEditing ? (
+        <div className="space-y-5">
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Your Full Name"
+            className="w-full p-4 border border-[#006A71] rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#006A71]"
+          />
+          <input
+            type="date"
+            name="dob"
+            value={formData.dob}
+            onChange={handleChange}
+            className="w-full p-4 border border-[#006A71] rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#006A71]"
+          />
+          <textarea
+            name="about"
+            value={formData.about}
+            onChange={handleChange}
+            rows={4}
+            placeholder="Tell us about yourself..."
+            className="w-full p-4 border border-[#006A71] rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#006A71]"
+          ></textarea>
+          <button
+            onClick={handleSave}
+            className="w-full py-3 text-lg font-bold bg-[#006A71] text-white rounded-xl hover:bg-black transition"
+          >
+            Save Changes
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4 text-black">
+          <h3 className="text-4xl font-bold">{userData.name}</h3>
+          <p><span className="font-semibold">Email:</span> {userData.email}</p>
+          <p><span className="font-semibold">DOB:</span> {userData.dob}</p>
+          <p><span className="font-semibold">Age:</span> {userData.age} years</p>
+          <p><span className="font-semibold">About:</span> {userData.about || "Not provided"}</p>
+
+          <button
+            onClick={() => setIsEditing(true)}
+            className="mt-5 w-full py-3 text-lg font-bold bg-[#006A71] text-white rounded-xl hover:bg-black transition"
+          >
+             Edit Profile
+          </button>
+        </div>
+      )}
+    </section>
+
+    <section className="relative bg-white/80 backdrop-blur-md border border-black/10 rounded-3xl shadow-xl p-8 transition-transform hover:scale-[1.01]">
+      <h3 className="text-3xl font-bold text-[#006A71] mb-4">About Me</h3>
+      <p className="text-lg text-black leading-relaxed">
+        {userData.about || "No additional information provided."}
+      </p>
+    </section>
+
+    <section className="relative bg-white/80 backdrop-blur-md border border-black/10 rounded-3xl shadow-xl p-8 transition-transform hover:scale-[1.01]">
+      <h3 className="text-3xl font-bold text-[#006A71] mb-4">Diagnosis History</h3>
+      <p className="text-lg text-black mb-6">
+        Explore all your diagnosis records with detailed reports.
+      </p>
+
+      <div className="grid sm:grid-cols-2 gap-6">
+        <Link href="/diagnosis">
+          <div className="cursor-pointer p-6 rounded-xl bg-[#006A71] text-white hover:bg-black transition duration-300 shadow-lg hover:shadow-2xl">
+            <h4 className="text-2xl font-bold mb-2">View Diagnoses</h4>
+            <p className="text-lg">Check your medical insights & past records.</p>
           </div>
-        </section>
-      </main>
-    </div>
+        </Link>
+        <Link href="/reports">
+          <div className="cursor-pointer p-6 rounded-xl bg-[#006A71] text-white hover:bg-black transition duration-300 shadow-lg hover:shadow-2xl">
+            <h4 className="text-2xl font-bold mb-2">Download Reports</h4>
+            <p className="text-lg">Get detailed diagnosis PDFs anytime.</p>
+          </div>
+        </Link>
+      </div>
+    </section>
+  </main>
+</div>
+
   );
 }

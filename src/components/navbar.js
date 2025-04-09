@@ -44,7 +44,7 @@ export default function Navbar() {
             <Link href="/diagnosis">Diagnosis</Link>
           </li>
           <li className="text-[#006A71] hover:text-[#000000] cursor-pointer transition font-mono">
-            <Link href="/about">About</Link>
+            <Link href="/appointment">Consult</Link>
           </li>
           <li className="text-[#006A71] hover:text-[#000000] cursor-pointer transition font-mono">
             <Link href="/contact">Contact</Link>
@@ -84,7 +84,7 @@ export default function Navbar() {
               <Link href="/diagnosis">Diagnosis</Link>
             </li>
             <li className="text-[#006A71] text-lg cursor-pointer font-mono" onClick={() => setIsOpen(false)}>
-              <Link href="/about">About</Link>
+              <Link href="/appointment">Consult</Link>
             </li>
             <li className="text-[#006A71] text-lg cursor-pointer font-mono" onClick={() => setIsOpen(false)}>
               <Link href="/contact">Contact</Link>
@@ -92,6 +92,7 @@ export default function Navbar() {
           </ul>
           <div className="flex flex-col items-center mt-4 space-y-4">
             {currentUser ? (
+              <div className="w-full flex-col justify-between">
               <button
                 onClick={() => {
                   setIsOpen(false);
@@ -101,6 +102,16 @@ export default function Navbar() {
               >
                 Logout
               </button>
+              <button
+              onClick={() => {
+                setIsOpen(false);
+                handleLogout();
+              }}
+              className="w-full bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-2 rounded-lg cursor-pointer font-mono shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition"
+            >
+              Profile
+            </button>
+            </div>
             ) : (
               <button
                 onClick={() => setIsOpen(false)}

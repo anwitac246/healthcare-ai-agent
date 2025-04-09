@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-// Dynamically load the Google Maps script if it hasn't been loaded already.
 function loadGoogleMapsScript(callback) {
   if (typeof window.google === "object" && typeof window.google.maps === "object") {
     callback();
@@ -49,7 +48,6 @@ export default function NearbyDoctors() {
     }
   }, [map]);
 
-  // Remove previously added markers from the map.
   const clearMarkers = () => {
     markersRef.current.forEach(marker => marker.setMap(null));
     markersRef.current = [];
@@ -102,8 +100,7 @@ export default function NearbyDoctors() {
     setSelectedDoctor(doctor);
     setEta("");
     if (!map) return;
-    
-    // Clear previous markers and directions.
+
     clearMarkers();
     if (directionsRendererRef.current) {
       directionsRendererRef.current.setMap(null);
@@ -113,7 +110,6 @@ export default function NearbyDoctors() {
     const doctorLoc = new window.google.maps.LatLng(doctor.location.lat, doctor.location.lng);
     map.setCenter(doctorLoc);
 
-    // Add a marker for the selected doctor.
     const marker = new window.google.maps.Marker({
       position: doctorLoc,
       map,
@@ -121,7 +117,6 @@ export default function NearbyDoctors() {
     });
     markersRef.current.push(marker);
 
-    // Initialize and set up the directions renderer.
     const directionsService = new window.google.maps.DirectionsService();
     directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
       suppressMarkers: true,
@@ -132,7 +127,6 @@ export default function NearbyDoctors() {
       setError("Geolocation is not supported by this browser.");
       return;
     }
-    // Get the latest user location before fetching directions.
     navigator.geolocation.getCurrentPosition((pos) => {
       const origin = {
         lat: pos.coords.latitude,
@@ -164,29 +158,29 @@ export default function NearbyDoctors() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#e0f7fa] to-[#f1f8e9] px-6 py-10">
+    <div className="min-h-screen font-mono bg-gradient-to-br from-[#e0f7fa] to-[#f1f8e9] px-6 py-10">
       <Navbar />
-      <div className="max-w-6xl mx-auto my-30">
-        <h1 className="text-5xl font-extrabold text-center text-[#004d40] mb-10 drop-shadow">
+      <div className="max-w-6xl mx-auto my-20">
+        <h1 className="text-5xl font-extrabold text-center text-[#006A71] mb-12 drop-shadow">
           Find Nearby Doctors
         </h1>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-          <label className="flex items-center gap-2 text-lg font-medium text-[#004d40]">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-10">
+          <label className="flex items-center gap-2 text-lg font-semibold text-[#004d40]">
             <input
               type="radio"
               checked={!useManual}
               onChange={() => setUseManual(false)}
-              className="accent-[#004d40]"
+              className="accent-[#006A71]"
             />
             Use Current Location
           </label>
-          <label className="flex items-center text-[#004d40] gap-2 text-lg font-medium">
+          <label className="flex items-center text-[#006A71] gap-2 text-lg font-semibold">
             <input
               type="radio"
               checked={useManual}
               onChange={() => setUseManual(true)}
-              className="accent-[#004d40]"
+              className="accent-[#006A71]"
             />
             Enter Location Manually
           </label>
@@ -198,58 +192,59 @@ export default function NearbyDoctors() {
             placeholder="Enter a location (e.g., Mumbai)"
             value={manualLocation}
             onChange={(e) => setManualLocation(e.target.value)}
-            className="w-full text-[#004d40] max-w-xl mx-auto border border-gray-300 px-5 py-3 rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-[#004d40] mb-6"
+            className="w-full items-center text-[#006A71] max-w-xl mx-auto border border-gray-300 px-5 py-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-[#004d40] mb-8"
           />
         )}
 
         <div className="text-center">
           <button
             onClick={handleSearch}
-            className="bg-[#004d40] hover:bg-[#00332e] text-white px-6 py-3 rounded-full text-lg font-semibold shadow-lg transition duration-300"
+            className="bg-[#006A71] cursor-pointer hover:bg-[#00251a] text-white px-8 py-3 rounded-full text-lg font-bold shadow-lg transition-transform hover:scale-105 duration-300"
           >
-            Search
+             Search
           </button>
         </div>
 
-        {loading && (
-          <p className="text-center text-blue-700 mt-4 animate-pulse">Loading...</p>
-        )}
+        {loading && <p className="text-center text-blue-700 mt-4 animate-pulse">Loading...</p>}
         {error && <p className="text-center text-red-600 mt-4">{error}</p>}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
-          {doctors.map((doc, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 hover:shadow-2xl transition-transform transform hover:-translate-y-1"
-            >
-              <h2 className="text-xl font-bold text-[#00695c] mb-2">{doc.name}</h2>
-              <p className="text-gray-700 mb-1">{doc.address}</p>
-              {doc.rating && <p className="text-gray-600">⭐ {doc.rating}</p>}
-              <p className={doc.open_now ? "text-green-600" : "text-red-500"}>
-                {doc.open_now ? "Open Now" : "Closed"}
-              </p>
-              <button
-                onClick={() => showOnMap(doc)}
-                className="mt-4 w-full bg-[#00695c] text-white py-2 rounded-lg hover:bg-[#004d40] transition"
-              >
-                Show on Map
-              </button>
-            </div>
-          ))}
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+  {doctors.map((doc, i) => (
+    <div
+      key={i}
+      className="bg-white rounded-2xl border border-gray-200 shadow-xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-transform duration-300 flex flex-col justify-between min-h-[280px]"
+    >
+      <div>
+        <h2 className="text-xl font-bold text-[#00695c] mb-2">{doc.name}</h2>
+        <p className="text-gray-700 mb-1">{doc.address}</p>
+        {doc.rating && <p className="text-gray-600">⭐ {doc.rating}</p>}
+        <p className={doc.open_now ? "text-green-600" : "text-red-500"}>
+          {doc.open_now ? "Open Now" : "Closed"}
+        </p>
+      </div>
+      <button
+        onClick={() => showOnMap(doc)}
+        className="mt-6 w-full bg-[#00695c] text-white py-2 rounded-lg hover:bg-[#004d40] transition"
+      >
+        Show on Map
+      </button>
+    </div>
+  ))}
+</div>
 
-        <div className="mt-14">
+
+        <div className="mt-16">
           <h3 className="text-2xl font-bold mb-4 text-[#004d40]">
-            {selectedDoctor ? `Directions to ${selectedDoctor.name}` : "Map"}
+            {selectedDoctor ? `🗺️ Directions to ${selectedDoctor.name}` : "📍 Map"}
           </h3>
           <div
             id="map"
             ref={mapContainerRef}
-            className="w-full h-96 rounded-xl shadow-md mb-4"
+            className="w-full h-[450px] rounded-xl shadow-2xl border border-gray-200"
           />
           {eta && (
-            <p className="text-lg text-[#004d40] font-medium">
-              Estimated travel time: {eta}
+            <p className="text-lg text-[#004d40] font-semibold mt-4">
+              Estimated travel time: <span className="underline">{eta}</span>
             </p>
           )}
         </div>
