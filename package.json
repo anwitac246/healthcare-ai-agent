@@ -23,6 +23,8 @@
     "lucide-react": "^0.483.0",
     "next": "15.2.4",
     "node-cron": "^3.0.3",
+    "peer": "^1.0.2",
+    "peerjs": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
@@ -31,13 +33,18 @@
     "react-textarea-autosize": "^8.5.8",
     "react-tsparticles": "^2.12.2",
     "remark-gfm": "^4.0.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "tsparticles": "^3.8.1",
     "twilio": "^5.5.2",
-    "twilio-video": "^2.30.0"
+    "twilio-video": "^2.30.0",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "concurrently": "^9.1.2",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
     "tailwindcss": "^4"
