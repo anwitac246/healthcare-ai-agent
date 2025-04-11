@@ -1,17 +1,15 @@
 'use client';
+
 import React from 'react';
-import Navbar from '@/components/navbar';
 import { motion } from 'framer-motion';
-import Link from 'next/link';
 
 export default function About() {
   return (
-    <div className="min-h-screen font-sans" style={{ background: '#F2EFE7', color: '#006A71' }}>
-      <Navbar />
-
+    <div id="about" className="font-sans" style={{ background: '#F2EFE7', color: '#006A71' }}>
       <motion.section
         initial={{ opacity: 0, y: -60 }}
-        animate={{ opacity: 1, y: 0 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
         transition={{ duration: 1 }}
         className="py-24 px-6 text-center"
       >
@@ -31,10 +29,10 @@ export default function About() {
         className="py-16 px-8 rounded-xl mx-auto text-center shadow-xl max-w-5xl"
         style={{ background: '#9ACBD0' }}
       >
-        <h2 className="text-4xl font-bold mb-6" style={{ color: '#006A71' }}>
+        <h2 className="text-4xl font-bold mb-6 pt-6" style={{ color: '#006A71' }}>
           Our Vision
         </h2>
-        <p className="text-lg" style={{ color: '#F2EFE7' }}>
+        <p className="text-lg pb-6 px-6" style={{ color: '#F2EFE7' }}>
           At AetherCare, we’re revolutionizing healthcare by blending state-of-the-art AI diagnostics, personalized care, and innovative technology to create a system that’s efficient, accessible, and truly patient-centric.
         </p>
       </motion.section>
@@ -67,8 +65,9 @@ export default function About() {
 
       <motion.section
         initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 1 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1 }}
         className="py-16 px-8 text-center"
       >
         <h2 className="text-4xl font-bold mb-6" style={{ color: '#006A71' }}>

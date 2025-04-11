@@ -1,57 +1,75 @@
 
-'use client'
-import React, { useEffect, useState } from 'react'
-import Navbar from '@/components/navbar'
-import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import { db, app } from '@/app/firebase-config'
-import { ref, onValue, update } from 'firebase/database'
+
+'use client';
+import React, { useEffect, useState } from 'react';
+import Navbar from '@/components/navbar';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { db, app } from '@/app/firebase-config';
+import { ref, onValue, update } from 'firebase/database';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function DoctorProfile() {
-  const [appointments, setAppointments] = useState([])
-  const [userId, setUserId] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [appointments, setAppointments] = useState([]);
+  const [userId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const auth = getAuth(app)
-    const unsub = onAuthStateChanged(auth, user => {
+    const auth = getAuth(app);
+    const unsub = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUserId(user.uid)
+        setUserId(user.uid);
       } else {
-        setUserId(null)
+        setUserId(null);
       }
-      setLoading(false)
-    })
-    return () => unsub()
-  }, [])
+      setLoading(false);
+    });
+    return () => unsub();
+  }, []);
 
-useEffect(() => {
-    if (!userId) return
-    const appointmentsRef = ref(db, 'appointments')
-    const unsub = onValue(appointmentsRef, snapshot => {
-      const data = snapshot.val() || {}
-      const all = Object.entries(data).map(([id, val]) => ({ id, ...val }))
+  useEffect(() => {
+    if (!userId) return;
+    const appointmentsRef = ref(db, 'appointments');
+    const unsub = onValue(appointmentsRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      const all = Object.entries(data).map(([id, val]) => ({ id, ...val }));
       const doctorAppointments = all
-        .filter(appt => appt.doctorId === userId)
-        .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime)) 
-      setAppointments(doctorAppointments)
-    })
-    return () => unsub()
-  }, [userId])
-  
+        .filter((appt) => appt.doctorId === userId)
+        .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+      setAppointments(doctorAppointments);
+    });
+    return () => unsub();
+  }, [userId]);
 
   const handleAction = async (appt, action) => {
-    const apptRef = ref(db, `appointments/${appt.id}`)
-    await update(apptRef, {
-      status: action === 'accept' ? 'accepted' : 'rejected'
-    })
-  }
+    const apptRef = ref(db, `appointments/${appt.id}`);
+    let updates = { status: action === 'accept' ? 'accepted' : 'rejected' };
+
+    if (action === 'accept') {
+     
+      const roomId = uuidv4();
+      
+      const meetingLink = `${window.location.origin}/room/${roomId}`;
+    
+      updates.meetingLink = meetingLink;
+    }
+
+    try {
+      await update(apptRef, updates);
+      if (action === 'accept') {
+        console.log('Meeting link:', meetingLink);
+      }
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      alert('Failed to update appointment. Please try again.');
+    }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-600">Loading...</p>
       </div>
-    )
+    );
   }
 
   if (!userId) {
@@ -59,7 +77,7 @@ useEffect(() => {
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-red-500">You must be logged in to view this page.</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -75,7 +93,7 @@ useEffect(() => {
           <p className="text-center text-gray-600">No appointments yet.</p>
         ) : (
           <div className="space-y-6">
-            {appointments.map(appt => (
+            {appointments.map((appt) => (
               <div
                 key={appt.id}
                 className="border border-[#006A71]/40 rounded-lg p-6 shadow-md bg-white"
@@ -99,6 +117,19 @@ useEffect(() => {
                     {appt.status}
                   </span>
                 </p>
+                {appt.meetingLink && (
+                  <p className="text-gray-800">
+                    <strong>Meeting Link:</strong>{' '}
+                    <a
+                      href={appt.meetingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      Join Meeting
+                    </a>
+                  </p>
+                )}
 
                 {appt.status === 'pending' && (
                   <div className="flex gap-4 mt-4">
@@ -122,5 +153,5 @@ useEffect(() => {
         )}
       </div>
     </div>
-  )
+  );
 }

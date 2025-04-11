@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { use } from 'react';
+import { useRouter } from 'next/navigation';
 import Peer from 'peerjs';
 import io from 'socket.io-client';
 import Head from 'next/head';
@@ -11,6 +12,7 @@ const socket = io('http://localhost:5000');
 export default function Room({ params: paramsPromise }) {
   const params = use(paramsPromise);
   const { roomId } = params;
+  const router = useRouter();
 
   const videoGridRef = useRef(null);
   const myVideoRef = useRef(null);
@@ -22,6 +24,7 @@ export default function Room({ params: paramsPromise }) {
   const [audioMuted, setAudioMuted] = useState(false);
   const [videoOff, setVideoOff] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
 
   useEffect(() => {
     if (!roomId) return;
@@ -81,6 +84,15 @@ export default function Room({ params: paramsPromise }) {
               delete peersRef.current[userId];
             }
           });
+
+          socket.on('room-timer', (seconds) => {
+            setTimeLeft(seconds);
+          });
+
+          socket.on('room-expired', () => {
+            alert('This room has expired.');
+            router.push('/room');
+          });
         })
         .catch((err) => console.error('Media error:', err));
     });
@@ -93,7 +105,23 @@ export default function Room({ params: paramsPromise }) {
         localStream.current.getTracks().forEach((t) => t.stop());
       }
     };
-  }, [roomId]);
+  }, [roomId, router]);
+
+  useEffect(() => {
+    if (timeLeft === null || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
 
   function connectToNewUser(userId, stream) {
     const call = myPeer.current.call(userId, stream);
@@ -115,7 +143,7 @@ export default function Room({ params: paramsPromise }) {
     video.addEventListener('loadedmetadata', () => video.play());
 
     const wrapper = document.createElement('div');
-    wrapper.className = 'relative rounded-lg overflow-hidden bg-gray-900 shadow-md';
+    wrapper.className = 'relative rounded-lg overflow-hidden bg-black shadow-md';
     wrapper.dataset.id = id;
     video.className = 'w-full h-64 object-cover';
     wrapper.appendChild(video);
@@ -144,24 +172,40 @@ export default function Room({ params: paramsPromise }) {
     setTimeout(() => setLinkCopied(false), 2000);
   };
 
+  const formatTime = (seconds) => {
+    if (!seconds || seconds <= 0) return 'Expired';
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
   if (!roomId) {
-    return <div className="flex items-center justify-center h-screen text-gray-500">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen text-black">
+        Loading...
+      </div>
+    );
   }
 
   return (
     <>
       <Head>
-        <title>VideoSync – Room {roomId}</title>
+        <title>AetherCare – Room {roomId}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="min-h-screen bg-gray-100 flex flex-col">
-        <header className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 shadow-lg">
+      <div className="min-h-screen bg-[#F2EFE7] flex flex-col">
+        <header className="bg-gradient-to-r from-[#006A71] to-black p-4 shadow-lg">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-white">VideoSync</h1>
-            <span className="text-sm bg-white text-indigo-600 px-3 py-1 rounded-full font-medium">
-              Room ID: {roomId}
-            </span>
+            <h1 className="text-2xl font-bold text-white">AetherCare</h1>
+            <div className="flex items-center gap-4">
+              <span className="text-sm bg-white text-[#006A71] px-3 py-1 rounded-full font-medium">
+                Room ID: {roomId}
+              </span>
+              <span className="text-sm bg-white text-black px-3 py-1 rounded-full font-medium">
+                Time Left: {formatTime(timeLeft)}
+              </span>
+            </div>
           </div>
         </header>
 
@@ -172,20 +216,29 @@ export default function Room({ params: paramsPromise }) {
           />
 
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <button onClick={toggleAudio} className="px-5 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors duration-200 shadow-md">
+            <button
+              onClick={toggleAudio}
+              className="px-5 py-2 bg-[#006A71] text-white rounded-full hover:bg-black transition-colors duration-200 shadow-md"
+            >
               {audioMuted ? 'Unmute Audio' : 'Mute Audio'}
             </button>
-            <button onClick={toggleVideo} className="px-5 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors duration-200 shadow-md">
+            <button
+              onClick={toggleVideo}
+              className="px-5 py-2 bg-[#006A71] text-white rounded-full hover:bg-black transition-colors duration-200 shadow-md"
+            >
               {videoOff ? 'Start Video' : 'Stop Video'}
             </button>
-            <button onClick={shareLink} className="px-5 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors duration-200 shadow-md">
+            <button
+              onClick={shareLink}
+              className="px-5 py-2 bg-gradient-to-r from-[#006A71] to-black text-white rounded-full hover:from-black hover:to-[#006A71] transition-colors duration-200 shadow-md"
+            >
               Share Room Link
             </button>
           </div>
         </main>
 
         {linkCopied && (
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800 bg-opacity-90 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-out">
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#006A71] bg-opacity-90 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-out">
             Link Copied!
           </div>
         )}
