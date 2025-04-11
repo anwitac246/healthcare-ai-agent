@@ -4,7 +4,7 @@ AetherCare is an AI-powered health assistant that leverages cutting-edge medical
 
 ---
 
-## 🔍 Features
+## Features
 
 ### 1. **AI-Based Diagnosis from PubMed Literature**
 - Powered by a specialized AI agent trained on **PubMed articles**.
@@ -24,7 +24,7 @@ AetherCare is an AI-powered health assistant that leverages cutting-edge medical
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 - **Frontend**: Next.js (App Router)  
 - **Backend**: Flask + Python (for AI & diagnosis logic)   
