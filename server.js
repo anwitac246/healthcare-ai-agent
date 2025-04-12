@@ -1,22 +1,30 @@
+// server.js
 const express = require('express');
 const { ExpressPeerServer } = require('peer');
 const http = require('http');
 const socketIO = require('socket.io');
+const admin = require('firebase-admin');
+const serviceAccount = require('./serviceAccountKey.json'); // ← your service account
+
+// Initialize Firebase Admin for appointment TTL guard
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: 'https://your-project.firebaseio.com'  // ← replace with your DB URL
+});
+const adminDb = admin.database();
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server, {
-  cors: { origin: '*' }
-});
+const io = socketIO(server, { cors: { origin: '*' } });
 
 const peerServer = ExpressPeerServer(server, { debug: true });
 app.use('/peerjs', peerServer);
 
 const PORT = process.env.PORT || 5000;
 const rooms = new Map();
-const ROOM_EXPIRY_MS = 30 * 60 * 1000; 
+const ROOM_EXPIRY_MS = 30 * 60 * 1000;
 
-
+// In‑memory TTL cleanup
 setInterval(() => {
   const now = Date.now();
   for (const [roomId, { createdAt }] of rooms) {
@@ -27,11 +35,41 @@ setInterval(() => {
   }
 }, 60 * 1000);
 
-io.on('connection', socket => {
-  socket.on('join-room', (roomId, userId) => {
-    const now = Date.now();
+io.on('connection', (socket) => {
+  socket.on('join-room', async (roomId, userId) => {
+    // —— Firebase‑Admin guard (optional but recommended) —— 
+    try {
+      const snap = await adminDb
+        .ref('appointments')
+        .orderByChild('roomId')
+        .equalTo(roomId)
+        .once('value');
+      const data = snap.val();
+      if (!data) {
+        socket.emit('room-expired');
+        return socket.disconnect(true);
+      }
+      const [apptId, appt] = Object.entries(data)[0];
+      const now = Date.now();
+      if (!appt.generatedAt || now > appt.generatedAt + ROOM_EXPIRY_MS) {
+        // mark expired in DB
+        await adminDb.ref(`appointments/${apptId}`).update({
+          status: 'completed',
+          meetingLink: null,
+          generatedAt: null,
+          roomId: null,
+        });
+        socket.emit('room-expired');
+        return socket.disconnect(true);
+      }
+    } catch (err) {
+      console.error('Firebase guard error:', err);
+      socket.emit('room-expired');
+      return socket.disconnect(true);
+    }
 
-   
+    // —— existing in‑memory TTL guard —— 
+    const now = Date.now();
     if (rooms.has(roomId)) {
       const { createdAt } = rooms.get(roomId);
       if (now - createdAt >= ROOM_EXPIRY_MS) {
@@ -40,34 +78,23 @@ io.on('connection', socket => {
         return;
       }
     }
-
     if (!rooms.has(roomId)) {
       rooms.set(roomId, { users: new Set(), createdAt: now });
     }
-
     const room = rooms.get(roomId);
     room.users.add(userId);
     socket.join(roomId);
 
-   
     socket.to(roomId).emit('user-connected', userId);
-
-    socket.emit(
-      'room-users',
-      Array.from(room.users).filter(id => id !== userId)
-    );
-
+    socket.emit('room-users', Array.from(room.users).filter(id => id !== userId));
     const remainingTime = ROOM_EXPIRY_MS - (now - room.createdAt);
-    socket.emit('room-timer', Math.floor(remainingTime / 1000)); 
+    socket.emit('room-timer', Math.floor(remainingTime / 1000));
 
     socket.on('disconnect', () => {
-      if (rooms.has(roomId)) {
-        room.users.delete(userId);
-        if (room.users.size === 0) {
-          rooms.delete(roomId);
-        }
-        socket.to(roomId).emit('user-disconnected', userId);
-      }
+      if (!rooms.has(roomId)) return;
+      room.users.delete(userId);
+      if (room.users.size === 0) rooms.delete(roomId);
+      socket.to(roomId).emit('user-disconnected', userId);
     });
   });
 });

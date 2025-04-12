@@ -1,6 +1,6 @@
-
-
+// doctor_profile.js
 'use client';
+
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/navbar';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -13,69 +13,81 @@ export default function DoctorProfile() {
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Auth listener
   useEffect(() => {
     const auth = getAuth(app);
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserId(user.uid);
-      } else {
-        setUserId(null);
-      }
+      setUserId(user ? user.uid : null);
       setLoading(false);
     });
     return () => unsub();
   }, []);
 
+  // Load & auto-expire
   useEffect(() => {
     if (!userId) return;
-    const appointmentsRef = ref(db, 'appointments');
-    const unsub = onValue(appointmentsRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      const all = Object.entries(data).map(([id, val]) => ({ id, ...val }));
-      const doctorAppointments = all
-        .filter((appt) => appt.doctorId === userId)
+    const apptRef = ref(db, 'appointments');
+    const unsub = onValue(apptRef, (snap) => {
+      const data = snap.val() || {};
+      const all = Object.entries(data).map(([id, v]) => ({ id, ...v }));
+      const now = Date.now();
+
+      // Expire old links
+      all.forEach((appt) => {
+        if (
+          appt.status === 'accepted' &&
+          appt.generatedAt &&
+          now > appt.generatedAt + 30 * 60 * 1000
+        ) {
+          update(ref(db, `appointments/${appt.id}`), {
+            status: 'completed',
+            meetingLink: null,
+            generatedAt: null,
+            roomId: null,
+          });
+        }
+      });
+
+      // Filter & sort
+      const docs = all
+        .filter((a) => a.doctorId === userId)
         .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
-      setAppointments(doctorAppointments);
+      setAppointments(docs);
     });
     return () => unsub();
   }, [userId]);
 
+  // Accept / Reject
   const handleAction = async (appt, action) => {
     const apptRef = ref(db, `appointments/${appt.id}`);
-    let updates = { status: action === 'accept' ? 'accepted' : 'rejected' };
+    const updates = { status: action === 'accept' ? 'accepted' : 'rejected' };
 
     if (action === 'accept') {
-     
       const roomId = uuidv4();
-      
-      const meetingLink = `${window.location.origin}/room/${roomId}`;
-    
-      updates.meetingLink = meetingLink;
+      updates.roomId      = roomId;
+      updates.meetingLink = `${window.location.origin}/room/${roomId}`;
+      updates.generatedAt = Date.now();
     }
 
     try {
       await update(apptRef, updates);
-      if (action === 'accept') {
-        console.log('Meeting link:', meetingLink);
-      }
-    } catch (error) {
-      console.error('Error updating appointment:', error);
-      alert('Failed to update appointment. Please try again.');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update appointment. Try again.');
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
+        <p>Loading…</p>
       </div>
     );
   }
-
   if (!userId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">You must be logged in to view this page.</p>
+        <p className="text-red-600">Login required.</p>
       </div>
     );
   }
@@ -83,43 +95,40 @@ export default function DoctorProfile() {
   return (
     <div className="bg-white min-h-screen">
       <Navbar />
-
-      <div className="max-w-4xl mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center mb-10 text-[#006A71] mt-8">
+      <div className="max-w-4xl mx-auto p-6">
+        <h2 className="text-3xl font-bold text-[#006A71] mb-6">
           Doctor Dashboard
         </h2>
 
         {appointments.length === 0 ? (
-          <p className="text-center text-gray-600">No appointments yet.</p>
+          <p>No appointments yet.</p>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {appointments.map((appt) => (
               <div
                 key={appt.id}
-                className="border border-[#006A71]/40 rounded-lg p-6 shadow-md bg-white"
+                className="border rounded-lg p-4 shadow-sm hover:shadow-md transition"
               >
-                <h3 className="text-2xl font-semibold text-[#006A71] mb-2">
-                  {appt.patientName}
-                </h3>
-                <p className="text-gray-800">
-                  <strong>Description:</strong> {appt.description}
-                </p>
-                <p className="text-gray-800">
-                  <strong>Date/Time:</strong>{' '}
+                <h3 className="text-xl font-semibold">{appt.patientName}</h3>
+                <p>
+                  <strong>Date:</strong>{' '}
                   {new Date(appt.dateTime).toLocaleString()}
                 </p>
-                <p className="text-gray-800">
-                  <strong>Mode:</strong> {appt.mode}
-                </p>
-                <p className="text-gray-800">
+                <p>
                   <strong>Status:</strong>{' '}
-                  <span className="font-bold text-[#006A71] capitalize">
+                  <span className={`capitalize ${
+                    {
+                      pending: 'text-yellow-600',
+                      accepted: 'text-green-600',
+                      rejected: 'text-red-600',
+                      completed: 'text-gray-500',
+                    }[appt.status]
+                  }`}>
                     {appt.status}
                   </span>
                 </p>
                 {appt.meetingLink && (
-                  <p className="text-gray-800">
-                    <strong>Meeting Link:</strong>{' '}
+                  <p className="mt-2">
                     <a
                       href={appt.meetingLink}
                       target="_blank"
@@ -130,18 +139,17 @@ export default function DoctorProfile() {
                     </a>
                   </p>
                 )}
-
                 {appt.status === 'pending' && (
-                  <div className="flex gap-4 mt-4">
+                  <div className="mt-4 flex gap-2">
                     <button
                       onClick={() => handleAction(appt, 'accept')}
-                      className="bg-[#006A71] hover:bg-[#004f54] text-white px-5 py-2 rounded shadow"
+                      className="px-4 py-2 bg-green-600 text-white rounded"
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => handleAction(appt, 'reject')}
-                      className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded shadow"
+                      className="px-4 py-2 bg-red-600 text-white rounded"
                     >
                       Reject
                     </button>
