@@ -68,7 +68,9 @@ assistant = Assistant(
         "Advice a medicine that would be suitable for pregnant women, old people and children",
         "Also ask what associated diseases someone might have before suggesting a medicine eg: diabetes, epilepsy, asthama, tuberculosis",
         "Make the response polite and upbeat please.",
-        "Provide a one liner summary in about 10 words in the following format: SUMMARY: _________"
+        "Provide a one liner summary in about 10 words in the following format: SUMMARY: _________",
+        "Provide the response in the same language as the language of the user's input",
+        "take all the diseases that match the symptoms into consideration before making a conclusion"
     ],
     show_tool_calls=True,
 )
@@ -106,6 +108,7 @@ def home():
 def chat():
     print("📨 Received request to /chat")
     message = request.form.get("message") or (request.json.get("message") if request.is_json else None)
+    print(message)
     if not message:
         return jsonify({"error": "No message provided"}), 400
     message = message.strip()

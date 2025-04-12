@@ -12,6 +12,8 @@ import {
   FaTimes,
   FaPlus,
   FaPaperclip,
+  FaMicrophone,
+  FaVolumeUp,
 } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -29,11 +31,159 @@ export default function Diagnosis() {
   const [chatHistories, setChatHistories] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+  const [isSpeaking, setIsSpeaking] = useState(false); // Track TTS state
+  const [speakingMessageIndex, setSpeakingMessageIndex] = useState(null); // Track which message is being spoken
 
   const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // Initialize Speech Recognition
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recog = new SpeechRecognition();
+      recog.continuous = false;
+      recog.interimResults = true;
+      recog.lang = 'en-US';
+      setRecognition(recog);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!recognition) return;
+
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map(result => result[0].transcript)
+        .join('');
+      setInput(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsRecording(false);
+      setMessages(m => [
+        ...m,
+        {
+          role: 'assistant',
+          content: '**Error:** Speech recognition failed. Please try again or type your message.',
+          timestamp: Date.now(),
+        },
+      ]);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    return () => {
+      recognition.stop();
+    };
+  }, [recognition]);
+
+  const toggleRecording = () => {
+    if (!recognition) {
+      setMessages(m => [
+        ...m,
+        {
+          role: 'assistant',
+          content: '**Error:** Speech recognition is not supported in this browser.',
+          timestamp: Date.now(),
+        },
+      ]);
+      return;
+    }
+
+    if (isRecording) {
+      recognition.stop();
+    } else {
+      try {
+        recognition.start();
+        setIsRecording(true);
+      } catch (err) {
+        console.error('Failed to start recognition:', err);
+        setMessages(m => [
+          ...m,
+          {
+            role: 'assistant',
+            content: '**Error:** Unable to access microphone. Please check permissions.',
+            timestamp: Date.now(),
+          },
+        ]);
+      }
+    }
+  };
+
+
+  const speakText = (text, index = null) => {
+    if (!window.speechSynthesis) {
+      setMessages(m => [
+        ...m,
+        {
+          role: 'assistant',
+          content: '**Error:** Text-to-speech is not supported in this browser.',
+          timestamp: Date.now(),
+        },
+      ]);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.volume = 1;
+    utterance.rate = 1;
+    utterance.pitch = 1;
+
+    setIsSpeaking(true);
+    setSpeakingMessageIndex(index);
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setSpeakingMessageIndex(null);
+    };
+
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event.error);
+      setIsSpeaking(false);
+      setSpeakingMessageIndex(null);
+      setMessages(m => [
+        ...m,
+        {
+          role: 'assistant',
+          content: '**Error:** Failed to read text aloud. Please try again.',
+          timestamp: Date.now(),
+        },
+      ]);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleSpeakInput = () => {
+    if (input.trim()) {
+      speakText(input);
+    } else {
+      setMessages(m => [
+        ...m,
+        {
+          role: 'assistant',
+          content: '**Info:** No text to read. Please type or speak something first.',
+          timestamp: Date.now(),
+        },
+      ]);
+    }
+  };
+
+  const handleSpeakMessage = (content, index) => {
+
+    const cleanText = content.replace(/\*\*(.*?)\*\*/g, '$1').replace(/## (.*?)\n/g, '$1. ');
+    speakText(cleanText, index);
+  };
 
   useEffect(() => {
     const auth = getAuth();
@@ -55,7 +205,6 @@ export default function Diagnosis() {
     load();
   }, [user]);
 
-
   useEffect(() => {
     if (!db || !user) return;
     const chatsRef = ref(db, `chats/${user.uid}`);
@@ -68,7 +217,6 @@ export default function Diagnosis() {
     });
   }, [db, user]);
 
- 
   useEffect(() => {
     const el = chatContainerRef.current;
     if (!el) return;
@@ -86,11 +234,11 @@ export default function Diagnosis() {
     });
   };
 
-
   const extractSummary = text => {
-    const m = text.match(/SUMMARY:\s*(.*)/);
+    const m = text.match(/SUMMARY:\s*(.+)/);
     return m ? m[1] : text.split(' ').slice(0, 10).join(' ') + '...';
   };
+
   const calculateAge = dob => {
     const d = new Date(dob),
       t = new Date();
@@ -111,40 +259,49 @@ export default function Diagnosis() {
     set(convoRef, { summary: '', messages: {} }).catch(console.error);
   };
 
+ 
   const handleSendMessage = async () => {
+    
     if (!input.trim()) return;
+  
     const userMsg = { role: 'user', content: input, timestamp: Date.now() };
-    setMessages(m => [...m, userMsg]);
+
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
+  
     if (db && conversationId && user) {
       await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), userMsg);
     }
+  
+    const historyToSend = updatedMessages
+      .filter(m => m.role === 'user').map(m=>m.content).join('\n\n');
+  
+
+    console.log('History to send:', historyToSend);
+  
     try {
       const { data } = await axios.post('http://localhost:7000/chat', {
-        message: input,
-        history: messages.filter(m => m.role === 'user').slice(-10),
+        message: historyToSend,
       });
+  
       const botMsg = {
         role: 'assistant',
         content: `${data.response}\n\n**Confidence:** ${data.confidence}%`,
         timestamp: Date.now(),
       };
+  
       setMessages(m => [...m, botMsg]);
+  
       if (db && conversationId && user) {
-        await push(
-          ref(db, `chats/${user.uid}/${conversationId}/messages`),
-          botMsg
-        );
+        await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), botMsg);
       }
-     
+  
       if (!currentChat) {
         const summary = extractSummary(data.response);
         const newChat = { summary, messages: [userMsg, botMsg] };
         setChatHistories(h => [...h, { conversationId, ...newChat }]);
         setCurrentChat(newChat);
-        await set(
-          ref(db, `chats/${user.uid}/${conversationId}/summary`),
-          summary
-        );
+        await set(ref(db, `chats/${user.uid}/${conversationId}/summary`), summary);
       } else {
         setCurrentChat(prev => ({
           ...prev,
@@ -155,7 +312,7 @@ export default function Diagnosis() {
           ],
         }));
       }
-   
+  
       if (data.confidence >= 80) {
         generateMDReport(
           user.displayName,
@@ -176,10 +333,11 @@ export default function Diagnosis() {
         },
       ]);
     }
+  
     setInput('');
     setTimeout(scrollToBottom, 100);
   };
-
+  
 
   const handleKeyDown = e => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -188,7 +346,6 @@ export default function Diagnosis() {
     }
   };
 
- 
   const handleImageUpload = async e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -243,11 +400,8 @@ export default function Diagnosis() {
     }
   };
 
- 
   const generateMDReport = (name, email, dob, diag, conf) => {
-    let md = `# Diagnosis Report\n\n**Name:** ${name || '___'}\n\n**Email:** ${
-      email || '___'
-    }\n\n`;
+    let md = `# Diagnosis Report\n\n**Name:** ${name || '___'}\n\n**Email:** ${email || '___'}\n\n`;
     md += dob ? `**Age:** ${calculateAge(dob)}\n\n` : '**Age:** ___\n\n';
     md += `## Diagnosis:\n\n${diag}\n\n**Confidence:** ${conf}%\n`;
     const blob = new Blob([md], { type: 'text/markdown' });
@@ -259,7 +413,6 @@ export default function Diagnosis() {
     a.click();
     a.remove();
   };
-
 
   const loadChatHistory = history => {
     const msgs = Array.isArray(history.messages)
@@ -276,9 +429,7 @@ export default function Diagnosis() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-white to-[#006A71]">
       <Navbar />
-
       <div className="flex flex-1 relative my-20">
-        
         <motion.div
           className="fixed top-16 left-0 z-20 h-full w-64 bg-[#006A71]/90 backdrop-blur-lg p-4 flex flex-col shadow-xl"
           initial={{ x: -300 }}
@@ -319,9 +470,8 @@ export default function Diagnosis() {
           </button>
         )}
 
-      
         <div className="flex-1 flex flex-col ml-[250px] border-l border-[#9ACBD0]">
-        <div
+          <div
             ref={chatContainerRef}
             className="relative flex-1 overflow-y-auto p-6 space-y-4 bg-center bg-no-repeat bg-cover min-h-0"
             style={{
@@ -330,8 +480,6 @@ export default function Diagnosis() {
               backgroundRepeat: 'no-repeat',
             }}
           >
-            
-
             <div className="relative space-y-4">
               <AnimatePresence initial={false}>
                 {messages.map((msg, idx) => (
@@ -346,16 +494,29 @@ export default function Diagnosis() {
                     }`}
                   >
                     <div
-                      className={`p-4 rounded-xl max-w-[70%] shadow-md ${
+                      className={`p-4 rounded-xl max-w-[70%] shadow-md relative ${
                         msg.role === 'assistant'
                           ? 'bg-[#006A71] text-white'
                           : 'bg-white text-[#006A71] border border-[#9ACBD0]'
                       }`}
                     >
                       {msg.role === 'assistant' ? (
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {msg.content}
-                        </ReactMarkdown>
+                        <>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {msg.content}
+                          </ReactMarkdown>
+                          <button
+                            onClick={() => handleSpeakMessage(msg.content, idx)}
+                            className={`absolute top-2 right-2 p-1 rounded-full ${
+                              speakingMessageIndex === idx
+                                ? 'bg-yellow-500 text-white'
+                                : 'bg-white/20 text-white hover:bg-white/40'
+                            } transition`}
+                            aria-label="Read response aloud"
+                          >
+                            <FaVolumeUp size={16} />
+                          </button>
+                        </>
                       ) : (
                         msg.content
                       )}
@@ -375,7 +536,6 @@ export default function Diagnosis() {
             </button>
           )}
 
-        
           <div className="fixed bottom-0 left-[250px] w-[calc(100%-250px)] p-4 bg-white/90 border-t border-[#9ACBD0] shadow-lg backdrop-blur-sm">
             <form
               onSubmit={e => {
@@ -389,25 +549,51 @@ export default function Diagnosis() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type a message..."
+                placeholder="Type or speak a message..."
                 className="flex-1 px-4 py-2 bg-white text-black border border-[#9ACBD0] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#48A6A7]"
                 minRows={1}
                 maxRows={4}
               />
 
-      
               <button
                 type="button"
                 onClick={() => fileInputRef.current.click()}
                 className="p-2 bg-white border border-[#006A71] rounded-full hover:bg-[#f0f0f0] transition"
+                aria-label="Upload image"
               >
                 <FaPaperclip size={20} className="text-[#006A71]" />
               </button>
 
-            
+              <button
+                type="button"
+                onClick={toggleRecording}
+                className={`p-2 border border-[#006A71] rounded-full transition ${
+                  isRecording
+                    ? 'bg-red-500 text-white'
+                    : 'bg-white text-[#006A71] hover:bg-[#f0f0f0]'
+                }`}
+                aria-label={isRecording ? 'Stop recording' : 'Start recording'}
+              >
+                <FaMicrophone size={20} />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSpeakInput}
+                className={`p-2 border border-[#006A71] rounded-full transition ${
+                  isSpeaking && speakingMessageIndex === null
+                    ? 'bg-yellow-500 text-white'
+                    : 'bg-white text-[#006A71] hover:bg-[#f0f0f0]'
+                }`}
+                aria-label="Read input aloud"
+              >
+                <FaVolumeUp size={20} />
+              </button>
+
               <button
                 type="submit"
                 className="p-2 bg-[#006A71] border border-[#004B5F] text-white rounded-full hover:bg-[#004B5F] transition"
+                aria-label="Send message"
               >
                 <FaPaperPlane size={20} />
               </button>
