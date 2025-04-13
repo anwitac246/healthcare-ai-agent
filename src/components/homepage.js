@@ -104,9 +104,13 @@ export default function Homepage() {
           >
             Consultation
           </button>
+          
           <button className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#9ACBD0] to-[#006A71] shadow-lg hover:from-[#9ACBD0] hover:to-[#48A6A7] transition transform hover:scale-105">
-            Order Medicines
+          <Link href="/ambulance">
+            SOS Ambulance
+            </Link>
           </button>
+          
         </div>
       </motion.div>
 
