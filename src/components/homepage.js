@@ -68,8 +68,8 @@ export default function Homepage() {
         Welcome to{' '}
         <span className="text-[#006A71] font-mono">
           <Typewriter words={['AetherCare']} loop={false} cursor cursorStyle="|" delaySpeed={3000} />
-        </span>
-        , your trusted AI-powered health companion.
+        </span><br></br>
+        Your trusted AI-powered health companion.
       </motion.h1>
 
       <motion.p

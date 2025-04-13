@@ -1,21 +1,20 @@
+// ambulance.js
 "use client";
 
 import { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 
 export default function AmbulancePage() {
-  const [services, setServices]     = useState([]);
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState("");
-  const [coords, setCoords]         = useState({ lat: null, lng: null });
-
-  const [selected, setSelected]     = useState(null);
+  const [services, setServices]       = useState([]);
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState("");
+  const [coords, setCoords]           = useState({ lat: null, lng: null });
+  const [selected, setSelected]       = useState(null);
   const [editedPhone, setEditedPhone] = useState("");
-  const [callStage, setCallStage]   = useState("idle"); 
-  const [callResp, setCallResp]     = useState(null);
-  const [callError, setCallError]   = useState("");
+  const [callStage, setCallStage]     = useState("idle");
+  const [callResp, setCallResp]       = useState(null);
+  const [callError, setCallError]     = useState("");
 
- 
   useEffect(() => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser.");
@@ -24,18 +23,20 @@ export default function AmbulancePage() {
     setLoading(true);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
+        console.log("User location:", coords.latitude, coords.longitude);
         setCoords({ lat: coords.latitude, lng: coords.longitude });
         fetchServices(coords.latitude, coords.longitude);
       },
       (err) => {
+        console.error("Geolocation error:", err);
         setError("Failed to get location: " + err.message);
         setLoading(false);
       }
     );
   }, []);
 
- 
   async function fetchServices(lat, lng) {
+    console.log("Fetching services for lat/lng:", lat, lng);
     try {
       const res = await fetch("http://localhost:7000/nearby-ambulance-services", {
         method: "POST",
@@ -43,17 +44,20 @@ export default function AmbulancePage() {
         body: JSON.stringify({ lat, lng }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Unknown error");
+      if (!res.ok) {
+        console.error("Places API error details:", data.details);
+        throw new Error(data.error || "Unknown error");
+      }
       setServices(data.ambulance_services);
       setError("");
     } catch (e) {
       console.error("Fetch error:", e);
       setError("Error fetching services: " + e.message);
+      setServices([]);
     } finally {
       setLoading(false);
     }
   }
-
 
   function startCall(svc) {
     setSelected(svc);
@@ -62,7 +66,6 @@ export default function AmbulancePage() {
     setCallResp(null);
     setCallError("");
   }
-
 
   async function confirmCall() {
     setCallStage("calling");
@@ -73,14 +76,18 @@ export default function AmbulancePage() {
         body: JSON.stringify({
           name: selected.name,
           phone_number: selected.phone_number,
-          override_phone_number: editedPhone !== selected.phone_number ? editedPhone : null,
+          override_phone_number:
+            editedPhone !== selected.phone_number ? editedPhone : null,
           confirm: true,
           lat: coords.lat,
           lng: coords.lng,
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Call failed");
+      if (!res.ok) {
+        console.error("Call API error details:", data.details);
+        throw new Error(data.error || "Call failed");
+      }
       setCallResp(data);
       setCallStage("done");
     } catch (e) {
@@ -93,22 +100,17 @@ export default function AmbulancePage() {
   return (
     <div className="min-h-screen bg-[#f0fdfd] px-6 py-10">
       <Navbar />
-
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-[#006A71] mb-6 text-center">
           Nearby Ambulance Services
         </h1>
-
         {loading && (
           <p className="text-center text-black animate-pulse">Loading…</p>
         )}
         {error && <p className="text-center text-black">{error}</p>}
         {!loading && !error && services.length === 0 && (
-          <p className="text-center text-black">
-            No ambulance services found.
-          </p>
+          <p className="text-center text-black">No ambulance services found.</p>
         )}
-
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
           {services.map((svc, i) => (
             <div
@@ -119,9 +121,7 @@ export default function AmbulancePage() {
               <p className={svc.open_now ? "text-green-600" : "text-red-500"}>
                 {svc.open_now ? "Open Now" : "Closed"}
               </p>
-              <p className="mt-2 text-black font-mono">
-                {svc.phone_number}
-              </p>
+              <p className="mt-2 text-black font-mono">{svc.phone_number}</p>
               <button
                 onClick={() => startCall(svc)}
                 className="mt-3 bg-[#006A71] hover:bg-[#00514e] text-white px-4 py-2 rounded"
@@ -131,14 +131,10 @@ export default function AmbulancePage() {
             </div>
           ))}
         </div>
-
-        {/* Confirmation Modal */}
         {callStage === "confirm" && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl p-6 w-full max-w-md border border-black">
-              <h2 className="text-xl font-bold mb-4 text-black">
-                Confirm Call
-              </h2>
+              <h2 className="text-xl font-bold mb-4 text-black">Confirm Call</h2>
               <p className="mb-2 text-black">
                 Calling <strong>{selected.name}</strong>
               </p>
@@ -166,7 +162,6 @@ export default function AmbulancePage() {
             </div>
           </div>
         )}
-
         {callStage === "calling" && (
           <p className="mt-6 text-center text-black">Placing call…</p>
         )}
