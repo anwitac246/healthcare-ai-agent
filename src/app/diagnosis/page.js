@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
@@ -33,8 +34,9 @@ export default function Diagnosis() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState(null);
-  const [isSpeaking, setIsSpeaking] = useState(false); // Track TTS state
-  const [speakingMessageIndex, setSpeakingMessageIndex] = useState(null); // Track which message is being spoken
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMessageIndex, setSpeakingMessageIndex] = useState(null);
+  const [isUploading, setIsUploading] = useState(false); // Added for file upload
 
   const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
@@ -117,7 +119,6 @@ export default function Diagnosis() {
     }
   };
 
-
   const speakText = (text, index = null) => {
     if (!window.speechSynthesis) {
       setMessages(m => [
@@ -180,7 +181,6 @@ export default function Diagnosis() {
   };
 
   const handleSpeakMessage = (content, index) => {
-
     const cleanText = content.replace(/\*\*(.*?)\*\*/g, '$1').replace(/## (.*?)\n/g, '$1. ');
     speakText(cleanText, index);
   };
@@ -259,85 +259,163 @@ export default function Diagnosis() {
     set(convoRef, { summary: '', messages: {} }).catch(console.error);
   };
 
- 
-  const handleSendMessage = async () => {
-    
-    if (!input.trim()) return;
-  
-    const userMsg = { role: 'user', content: input, timestamp: Date.now() };
+  // 1) handleSendMessage: accepts optional overrideText (e.g. from document upload)
+const handleSendMessage = async (overrideText) => {
+  // Determine text to send
+  const textToSend = overrideText !== undefined ? overrideText : input;
+  if (!textToSend.trim()) return;
 
-    const updatedMessages = [...messages, userMsg];
-    setMessages(updatedMessages);
-  
+  // Build user message
+  const userMsg = {
+    role: 'user',
+    content: textToSend,
+    timestamp: Date.now(),
+  };
+
+  // Create updated messages array
+  const updatedMessages = [...messages, userMsg];
+
+  // Update state & Firebase
+  setMessages(updatedMessages);
+  if (db && conversationId && user) {
+    await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), userMsg);
+  }
+
+  // Build history string
+  const historyToSend = updatedMessages
+    .filter(m => m.role === 'user')
+    .map(m => m.content)
+    .join('\n\n');
+  console.log('History to send:', historyToSend);
+
+  try {
+    // Send to your chat endpoint
+    const { data } = await axios.post('http://localhost:7000/chat', {
+      message: historyToSend,
+    });
+
+    // Build assistant reply
+    const botMsg = {
+      role: 'assistant',
+      content: `${data.response}\n\n**Confidence:** ${data.confidence}%`,
+      timestamp: Date.now(),
+    };
+
+    // Append bot reply
+    const afterBotMessages = [...updatedMessages, botMsg];
+    setMessages(afterBotMessages);
     if (db && conversationId && user) {
-      await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), userMsg);
+      await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), botMsg);
     }
-  
-    const historyToSend = updatedMessages
-      .filter(m => m.role === 'user').map(m=>m.content).join('\n\n');
-  
 
-    console.log('History to send:', historyToSend);
+    // Handle chat history / summary
+    if (!currentChat) {
+      const summary = extractSummary(data.response);
+      setChatHistories(h => [...h, { conversationId, summary, messages: afterBotMessages }]);
+      setCurrentChat({ summary, messages: afterBotMessages });
+      await set(ref(db, `chats/${user.uid}/${conversationId}/summary`), summary);
+    } else {
+      setCurrentChat(prev => ({
+        ...prev,
+        messages: afterBotMessages,
+      }));
+    }
+
+    // Generate MD report if high confidence
+    if (data.confidence >= 80) {
+      generateMDReport(
+        user.displayName,
+        user.email,
+        user.dob,
+        data.response,
+        data.confidence
+      );
+    }
+  } catch (err) {
+    console.error('Chat error:', err);
+    const errorMsg = {
+      role: 'assistant',
+      content: '**Error:** Unable to reach server.',
+      timestamp: Date.now(),
+    };
+    const erroredMessages = [...updatedMessages, errorMsg];
+    setMessages(erroredMessages);
+    if (db && conversationId && user) {
+      await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), errorMsg);
+    }
+  }
+
+
+  if (overrideText === undefined) {
+    setInput('');
+  }
+
+
+  setTimeout(scrollToBottom, 100);
+};
+
+
+const handleDocumentUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  setIsUploading(true);
+
+
+  const uploadMsg = {
+    role: 'user',
+    content: `Uploaded document: ${file.name}`,
+    timestamp: Date.now(),
+  };
+  setMessages(m => [...m, uploadMsg]);
+  if (db && conversationId && user) {
+    await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), uploadMsg);
+  }
+
   
-    try {
-      const { data } = await axios.post('http://localhost:7000/chat', {
-        message: historyToSend,
-      });
-  
-      const botMsg = {
+  const form = new FormData();
+  form.append('file', file);
+
+  try {
+    const { data } = await axios.post(
+      'http://localhost:5000/diagnosis',
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+
+    const summary = data.summary || '';
+    if (!summary.trim()) {
+ 
+      const errorMsg = {
         role: 'assistant',
-        content: `${data.response}\n\n**Confidence:** ${data.confidence}%`,
+        content: '**Error:** No summary generated.',
         timestamp: Date.now(),
       };
-  
-      setMessages(m => [...m, botMsg]);
-  
+      setMessages(m => [...m, errorMsg]);
       if (db && conversationId && user) {
-        await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), botMsg);
+        await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), errorMsg);
       }
-  
-      if (!currentChat) {
-        const summary = extractSummary(data.response);
-        const newChat = { summary, messages: [userMsg, botMsg] };
-        setChatHistories(h => [...h, { conversationId, ...newChat }]);
-        setCurrentChat(newChat);
-        await set(ref(db, `chats/${user.uid}/${conversationId}/summary`), summary);
-      } else {
-        setCurrentChat(prev => ({
-          ...prev,
-          messages: [
-            ...(Array.isArray(prev.messages) ? prev.messages : []),
-            userMsg,
-            botMsg,
-          ],
-        }));
-      }
-  
-      if (data.confidence >= 80) {
-        generateMDReport(
-          user.displayName,
-          user.email,
-          user.dob,
-          data.response,
-          data.confidence
-        );
-      }
-    } catch (err) {
-      console.error(err);
-      setMessages(m => [
-        ...m,
-        {
-          role: 'assistant',
-          content: '**Error:** Unable to reach server.',
-          timestamp: Date.now(),
-        },
-      ]);
+    } else {
+
+      await handleSendMessage(summary);
     }
-  
-    setInput('');
+  } catch (err) {
+    console.error('Document upload error:', err);
+    const errorMsg = {
+      role: 'assistant',
+      content: '**Error:** Failed to process document. Please try again.',
+      timestamp: Date.now(),
+    };
+    setMessages(m => [...m, errorMsg]);
+    if (db && conversationId && user) {
+      await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), errorMsg);
+    }
+  } finally {
+    setIsUploading(false);
     setTimeout(scrollToBottom, 100);
-  };
-  
+  }
+};
+
 
   const handleKeyDown = e => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -346,59 +424,67 @@ export default function Diagnosis() {
     }
   };
 
-  const handleImageUpload = async e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const form = new FormData();
-    form.append('file', file);
-    try {
-      const { data: imgData } = await axios.post(
-        'http://localhost:7000/classify',
-        form,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
-      );
-      const { class_name, confidence } = imgData.image_classification;
-      const msg = {
-        role: 'user',
-        content: `Patient image: ${class_name} (${confidence}%). Please advise.`,
-        timestamp: Date.now(),
-      };
-      setMessages(m => [...m, msg]);
-      if (db && conversationId && user) {
-        await push(
-          ref(db, `chats/${user.uid}/${conversationId}/messages`),
-          msg
-        );
-      }
-      const { data: chatData } = await axios.post(
-        'http://localhost:7000/chat',
-        { message: msg.content }
-      );
-      const botMsg = {
-        role: 'assistant',
-        content: `${chatData.response}\n\n**Confidence:** ${confidence}%`,
-        timestamp: Date.now(),
-      };
-      setMessages(m => [...m, botMsg]);
-      if (db && conversationId && user) {
-        await push(
-          ref(db, `chats/${user.uid}/${conversationId}/messages`),
-          botMsg
-        );
-      }
-      if (confidence >= 80) {
-        generateMDReport(
-          user.displayName,
-          user.email,
-          user.dob,
-          chatData.response,
-          confidence
-        );
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // const handleDocumentUpload = async (e) => {
+  //   const file = e.target.files[0];
+  //   if (!file) return;
+  
+  //   setIsUploading(true);
+  
+  //   // 1) Show upload as a user message
+  //   const uploadMsg = {
+  //     role: 'user',
+  //     content: `Uploaded document: ${file.name}`,
+  //     timestamp: Date.now(),
+  //   };
+  //   setMessages(m => [...m, uploadMsg]);
+  //   if (db && conversationId && user) {
+  //     await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), uploadMsg);
+  //   }
+  
+  //   // 2) Send file to your diagnosis endpoint
+  //   const form = new FormData();
+  //   form.append('file', file);
+  
+  //   try {
+  //     const { data } = await axios.post(
+  //       'http://localhost:5000/diagnosis',
+  //       form,
+  //       { headers: { 'Content-Type': 'multipart/form-data' } }
+  //     );
+  
+  //     const summary = data.summary || '';
+  //     if (!summary.trim()) {
+  //       // 3a) No summary → show error
+  //       const errorMsg = {
+  //         role: 'assistant',
+  //         content: '**Error:** No summary generated.',
+  //         timestamp: Date.now(),
+  //       };
+  //       setMessages(m => [...m, errorMsg]);
+  //       if (db && conversationId && user) {
+  //         await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), errorMsg);
+  //       }
+  //     } else {
+  //       // 3b) Got a summary → feed into handleSendMessage
+  //       await handleSendMessage(summary);
+  //     }
+  //   } catch (err) {
+  //     console.error('Document upload error:', err);
+  //     const errorMsg = {
+  //       role: 'assistant',
+  //       content: '**Error:** Failed to process document. Please try again.',
+  //       timestamp: Date.now(),
+  //     };
+  //     setMessages(m => [...m, errorMsg]);
+  //     if (db && conversationId && user) {
+  //       await push(ref(db, `chats/${user.uid}/${conversationId}/messages`), errorMsg);
+  //     }
+  //   } finally {
+  //     setIsUploading(false);
+  //     setTimeout(scrollToBottom, 100);
+  //   }
+  // };
+  
 
   const generateMDReport = (name, email, dob, diag, conf) => {
     let md = `# Diagnosis Report\n\n**Name:** ${name || '___'}\n\n**Email:** ${email || '___'}\n\n`;
@@ -558,10 +644,15 @@ export default function Diagnosis() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current.click()}
-                className="p-2 bg-white border border-[#006A71] rounded-full hover:bg-[#f0f0f0] transition"
-                aria-label="Upload image"
+                disabled={isUploading}
+                className={`p-2 border border-[#006A71] rounded-full transition ${
+                  isUploading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-white text-[#006A71] hover:bg-[#f0f0f0]'
+                }`}
+                aria-label="Attach document"
               >
-                <FaPaperclip size={20} className="text-[#006A71]" />
+                <FaPaperclip size={20} />
               </button>
 
               <button
@@ -601,8 +692,8 @@ export default function Diagnosis() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
+                accept=".pdf,.png,.jpg,.jpeg,.docx,.txt"
+                onChange={handleDocumentUpload}
                 style={{ display: 'none' }}
               />
             </form>
