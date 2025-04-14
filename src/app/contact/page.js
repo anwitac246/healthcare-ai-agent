@@ -1,6 +1,6 @@
 
 "use client";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -14,6 +14,12 @@ export default function Contact() {
   const heroRef = useRef(null);
   const cardsRef = useRef([]);
   const formRef = useRef(null);
+  const statusRef = useRef(null);
+
+  // Form state
+  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [status, setStatus] = useState(null); // null, 'success', 'error'
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Hero animation: fade-in and slide-up
@@ -56,11 +62,67 @@ export default function Contact() {
       }
     );
 
+    // Status message animation: fade-in on change
+    if (status) {
+      gsap.fromTo(
+        statusRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }
+      );
+    }
+
     // Cleanup ScrollTriggers on unmount
     return () => {
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
-  }, []);
+  }, [status]);
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const validateForm = () => {
+    if (!formData.name.trim()) return "Name is required.";
+    if (!formData.email.trim()) return "Email is required.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+      return "Invalid email format.";
+    if (!formData.message.trim()) return "Message is required.";
+    return null;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus(null);
+    setIsSubmitting(true);
+
+    const error = validateForm();
+    if (error) {
+      setStatus({ type: "error", message: error });
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setStatus({ type: "success", message: "Message sent successfully!" });
+        setFormData({ name: "", email: "", message: "" });
+      } else {
+        const data = await response.json();
+        setStatus({ type: "error", message: data.error || "Failed to send message." });
+      }
+    } catch (err) {
+      setStatus({ type: "error", message: "An error occurred. Please try again." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const contactItems = [
     {
@@ -72,7 +134,7 @@ export default function Contact() {
           viewBox="0 0 24 24"
           width={24}
           height={24}
-          stroke="#F2EFE7"
+          stroke="#F5F5F5"
           fill="none"
           strokeWidth="1.5"
           strokeLinejoin="round"
@@ -92,7 +154,7 @@ export default function Contact() {
           viewBox="0 0 24 24"
           width={24}
           height={24}
-          stroke="#F2EFE7"
+          stroke="#F5F5F5"
           fill="none"
           strokeWidth="1.5"
           strokeLinecap="round"
@@ -111,7 +173,7 @@ export default function Contact() {
           viewBox="0 0 24 24"
           width={24}
           height={24}
-          stroke="#F2EFE7"
+          stroke="#F5F5F5"
           fill="none"
           strokeWidth="1.5"
           strokeLinejoin="round"
@@ -124,17 +186,14 @@ export default function Contact() {
   ];
 
   return (
-    <div className="font-sans bg-[#F2EFE7] text-[#006A71]">
-      {/* Sticky Header */}
-    <Navbar />
-
+    <div className="font-sans bg-[#F5F5F5] text-[#64A65F]">
+      <Navbar />
       <main>
         {/* Hero Section */}
         <section
           ref={heroRef}
-          className="relative py-24 px-6 text-center bg-gradient-to-b from-[#9ACBD0]/20 to-[#F2EFE7] overflow-hidden"
+          className="relative py-24 px-6 text-center bg-gradient-to-b from-[#A8D5A2]/20 to-[#F5F5F5] overflow-hidden"
         >
-          {/* Wave Background */}
           <div className="absolute inset-0 z-0">
             <svg
               className="w-full h-full opacity-10"
@@ -143,16 +202,16 @@ export default function Contact() {
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                fill="#9ACBD0"
+                fill="#A8D5A2"
                 d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1360,160L1440,160L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
               />
             </svg>
           </div>
           <div className="relative z-10 max-w-5xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold font-[Poppins] text-[#006A71]">
+            <h1 className="text-4xl md:text-5xl font-bold font-[Poppins] text-[#64A65F]">
               Contact Us
             </h1>
-            <p className="mt-6 text-base md:text-lg text-[#48A6A7] max-w-3xl mx-auto leading-relaxed">
+            <p className="mt-6 text-base md:text-lg text-[#4B8C47] max-w-3xl mx-auto leading-relaxed">
               Have questions, feedback, or just want to say hello? We’d love to hear from you! Whether
               you need assistance, want to collaborate, or have an idea to share, our team is here to
               help.
@@ -162,7 +221,7 @@ export default function Contact() {
 
         {/* Contact Methods */}
         <section className="py-16 px-6 max-w-7xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold font-[Poppins] text-center text-[#006A71] mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold font-[Poppins] text-center text-[#64A65F] mb-12">
             Connect With Us
           </h2>
           <div className="flex justify-center flex-wrap gap-6">
@@ -174,9 +233,9 @@ export default function Contact() {
                 aria-label={`Contact via ${item.label}`}
                 ref={(el) => (cardsRef.current[index] = el)}
               >
-                <div className="bg-[#006A71] p-6 rounded-xl shadow-lg flex items-center gap-4 w-64 hover:bg-[#48A6A7] transition-all duration-300 transform hover:scale-105 hover:shadow-xl">
-                  <div className="text-[#F2EFE7]">{item.icon}</div>
-                  <span className="text-base font-semibold text-[#F2EFE7]">{item.label}</span>
+                <div className="bg-[#64A65F] p-6 rounded-xl shadow-lg flex items-center gap-4 w-64 hover:bg-[#4B8C47] transition-all duration-300 transform hover:scale-105 hover:shadow-xl">
+                  <div className="text-[#F5F5F5]">{item.icon}</div>
+                  <span className="text-base font-semibold text-[#F5F5F5]">{item.label}</span>
                 </div>
               </Link>
             ))}
@@ -186,56 +245,72 @@ export default function Contact() {
         {/* Contact Form */}
         <section
           ref={formRef}
-          className="py-16 px-6 bg-gradient-to-t from-[#9ACBD0]/20 to-[#F2EFE7]"
+          className="py-16 px-6 bg-gradient-to-t from-[#A8D5A2]/20 to-[#F5F5F5]"
         >
-          <div className="max-w-3xl mx-auto bg-[#F2EFE7] rounded-2xl shadow-xl p-8 border border-[#9ACBD0]/50">
-            <h2 className="text-2xl md:text-3xl font-bold font-[Poppins] text-center text-[#006A71] mb-8">
+          <div className="max-w-3xl mx-auto bg-[#F5F5F5] rounded-2xl shadow-xl p-8 border border-[#A8D5A2]/50">
+            <h2 className="text-2xl md:text-3xl font-bold font-[Poppins] text-center text-[#64A65F] mb-8">
               Send Us a Message
             </h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert("Form submitted! (Placeholder)");
-              }}
-              className="space-y-6"
-            >
+            {status && (
+              <div
+                ref={statusRef}
+                className={`text-center mb-6 p-4 rounded-lg ${
+                  status.type === "success"
+                    ? "bg-green-100 text-[#64A65F]"
+                    : "bg-red-100 text-red-600"
+                }`}
+              >
+                {status.message}
+              </div>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="relative">
                 <input
                   type="text"
                   id="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
                   placeholder="Your Name"
-                  className="w-full px-4 py-3 bg-[#F2EFE7] border border-[#9ACBD0] rounded-lg focus:ring-2 focus:ring-[#48A6A7] focus:border-transparent text-[#006A71] transition-all"
+                  className="w-full px-4 py-3 bg-[#F5F5F5] border border-[#A8D5A2] rounded-lg focus:ring-2 focus:ring-[#4B8C47] focus:border-transparent text-[#64A65F] transition-all"
                   aria-label="Your name"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="relative">
                 <input
                   type="email"
                   id="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   placeholder="Your Email"
-                  className="w-full px-4 py-3 bg-[#F2EFE7] border border-[#9ACBD0] rounded-lg focus:ring-2 focus:ring-[#48A6A7] focus:border-transparent text-[#006A71] transition-all"
+                  className="w-full px-4 py-3 bg-[#F5F5F5] border border-[#A8D5A2] rounded-lg focus:ring-2 focus:ring-[#4B8C47] focus:border-transparent text-[#64A65F] transition-all"
                   aria-label="Your email"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="relative">
                 <textarea
                   id="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
                   placeholder="Your Message"
                   rows={5}
-                  className="w-full px-4 py-3 bg-[#F2EFE7] border border-[#9ACBD0] rounded-lg focus:ring-2 focus:ring-[#48A6A7] focus:border-transparent text-[#006A71] transition-all"
+                  className="w-full px-4 py-3 bg-[#F5F5F5] border border-[#A8D5A2] rounded-lg focus:ring-2 focus:ring-[#4B8C47] focus:border-transparent text-[#64A65F] transition-all"
                   aria-label="Your message"
                   required
+                  disabled={isSubmitting}
                 ></textarea>
               </div>
               <div className="text-center">
                 <button
                   type="submit"
-                  className="px-8 py-4 bg-[#006A71] text-[#F2EFE7] font-semibold font-[Poppins] rounded-full shadow-lg hover:bg-[#48A6A7] transition-all hover:shadow-xl focus:ring-2 focus:ring-[#48A6A7]"
+                  className="px-8 py-4 bg-[#64A65F] text-[#F5F5F5] font-semibold font-[Poppins] rounded-full shadow-lg hover:bg-[#4B8C47] transition-all hover:shadow-xl focus:ring-2 focus:ring-[#4B8C47] disabled:bg-[#A8D5A2] disabled:cursor-not-allowed"
                   aria-label="Submit contact form"
+                  disabled={isSubmitting}
                 >
-                  Send Message
+                  {isSubmitting ? "Sending..." : "Send Message"}
                 </button>
               </div>
             </form>
@@ -244,7 +319,7 @@ export default function Contact() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#006A71] text-[#F2EFE7] py-8">
+      <footer className="bg-[#64A65F] text-[#F5F5F5] py-8">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-base">
             © {new Date().getFullYear()} AetherCare. All rights reserved.
@@ -252,21 +327,21 @@ export default function Contact() {
           <div className="mt-4 space-x-4">
             <Link
               href="/about"
-              className="text-[#F2EFE7] hover:text-[#48A6A7] transition"
+              className="text-[#F5F5F5] hover:text-[#A8D5A2] transition"
               aria-label="About page"
             >
               About
             </Link>
             <Link
               href="/contact"
-              className="text-[#F2EFE7] hover:text-[#48A6A7] transition"
+              className="text-[#F5F5F5] hover:text-[#A8D5A2] transition"
               aria-label="Contact page"
             >
               Contact
             </Link>
             <Link
               href="/privacy"
-              className="text-[#F2EFE7] hover:text-[#48A6A7] transition"
+              className="text-[#F5F5F5] hover:text-[#A8D5A2] transition"
               aria-label="Privacy policy"
             >
               Privacy Policy

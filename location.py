@@ -1,8 +1,10 @@
+
 from flask import Flask, request, jsonify
 import requests
 import os
 from flask_cors import CORS
 from dotenv import load_dotenv
+import time
 
 load_dotenv(".env.local")
 app = Flask(__name__)
@@ -38,7 +40,7 @@ def get_nearby_doctors():
                 url = (
                     f"https://maps.googleapis.com/maps/api/place/nearbysearch/json"
                     f"?location={lat},{lng}"
-                    f"&radius=10000"
+                    f"&radius=20000"
                     f"&keyword={specialisation}"
                     f"&key={GOOGLE_MAPS_API_KEY}"
                 )
@@ -46,28 +48,46 @@ def get_nearby_doctors():
                 url = (
                     f"https://maps.googleapis.com/maps/api/place/nearbysearch/json"
                     f"?location={lat},{lng}"
-                    f"&radius=10000"
+                    f"&radius=20000"
                     f"&type=doctor"
                     f"&key={GOOGLE_MAPS_API_KEY}"
                 )
         else:
             return jsonify({'error': 'Invalid input'}), 400
 
-        response = requests.get(url)
-        result = response.json()
-
-        if result.get("status") != "OK":
-            return jsonify({'error': 'Google API error', 'details': result}), 500
-
         doctors = []
-        for place in result.get("results", []):
-            doctors.append({
-                'name':      place.get('name'),
-                'address':   place.get('vicinity') or place.get('formatted_address'),
-                'location':  place.get('geometry', {}).get('location'),
-                'rating':    place.get('rating'),
-                'open_now':  place.get('opening_hours', {}).get('open_now', False)
-            })
+        next_page_token = None
+        page_count = 0
+        max_pages = 3  # Google Places API allows up to 3 pages (60 results)
+
+        while page_count < max_pages:
+            # Make the API request
+            response = requests.get(url + (f"&pagetoken={next_page_token}" if next_page_token else ""))
+            result = response.json()
+
+            if result.get("status") != "OK":
+                return jsonify({'error': 'Google API error', 'details': result}), 500
+
+            # Process results
+            for place in result.get("results", []):
+                doctors.append({
+                    'name':      place.get('name'),
+                    'address':   place.get('vicinity') or place.get('formatted_address'),
+                    'location':  place.get('geometry', {}).get('location'),
+                    'rating':    place.get('rating'),
+                    'open_now':  place.get('opening_hours', {}).get('open_now', False)
+                })
+
+            # Check for next page token
+            next_page_token = result.get("next_page_token")
+            page_count += 1
+
+            # Break if no more pages or max pages reached
+            if not next_page_token or page_count >= max_pages:
+                break
+
+            # Google requires a short delay (2 seconds) before using the next page token
+            time.sleep(2)
 
         return jsonify({'doctors': doctors}), 200
 

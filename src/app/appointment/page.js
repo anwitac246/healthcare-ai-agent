@@ -13,6 +13,7 @@ import Link from 'next/link';
 export default function BookAppointment() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [userId, setUserId] = useState('');
   const [patientName, setPatientName] = useState('');
@@ -23,7 +24,6 @@ export default function BookAppointment() {
 
   const [doctors, setDoctors] = useState([]);
   const [appointments, setAppointments] = useState([]);
-
 
   useEffect(() => {
     const auth = getAuth(app);
@@ -56,7 +56,6 @@ export default function BookAppointment() {
     });
     return () => unsub();
   }, []);
-
 
   useEffect(() => {
     if (!userId) return;
@@ -157,32 +156,46 @@ export default function BookAppointment() {
   return (
     <div className="bg-white min-h-screen flex flex-col">
       <Head>
-        <title>Book an Appointment</title>
+        <title>Book Appointment</title>
       </Head>
       <Navbar />
 
-      <div className="flex flex-col md:flex-row flex-1 gap-6 px-6 py-8 mt-20">
-       
-        <aside className="w-full md:w-1/3">
-          <h3 className="text-2xl font-bold mb-4 text-[#006A71]">
+      <div className="flex flex-1 mt-20 relative">
+        {/* Sidebar Toggle Button */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="fixed top-24 left-4 z-20 px-4 py-2 bg-[#64A65F] text-white rounded-lg hover:bg-[#4B8C47] transition"
+        >
+          {sidebarOpen ? 'Hide Appointments' : 'Your Appointments'}
+        </button>
+
+        {/* Sidebar */}
+        <aside
+          className={`fixed top-0 left-0 h-full w-80 bg-white shadow-xl transition-transform duration-300 ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } z-10 pt-24 px-6 overflow-y-auto`}
+        >
+          <h3 className="text-2xl font-bold mb-4 text-[#64A65F] pt-15">
             Your Appointments
           </h3>
 
           {latest ? (
-            <div className="bg-white p-4 rounded-lg shadow border border-[#006A71]">
+            <div className="bg-white p-4 rounded-lg shadow border border-[#64A65F] mb-4">
               <p className="text-black">
                 <strong>Doctor:</strong> {latest.doctorName}
               </p>
               <p className="text-black">
-                <strong>Date:</strong>{' '}
-                {new Date(latest.dateTime).toLocaleString()}
+                <strong>Date:</strong> {new Date(latest.dateTime).toLocaleString()}
+              </p>
+              <p className="text-black">
+                <strong>Description:</strong> {latest.description}
               </p>
               <p className="text-black">
                 <strong>Status:</strong>{' '}
                 <span
                   className={`capitalize font-semibold ${
                     {
-                      pending: 'text-[#006A71]',
+                      pending: 'text-[#64A65F]',
                       accepted: 'text-black',
                       rejected: 'text-red-600',
                       completed: 'text-gray-500',
@@ -198,7 +211,7 @@ export default function BookAppointment() {
                     href={latest.meetingLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block px-4 py-2 bg-[#006A71] text-white rounded hover:bg-black transition"
+                    className="inline-block px-4 py-2 bg-[#64A65F] text-white rounded hover:bg-[#4B8C47] transition"
                   >
                     Join Video Call
                   </Link>
@@ -214,21 +227,23 @@ export default function BookAppointment() {
               {appointments.slice(1).map((a) => (
                 <li
                   key={a.id}
-                  className="bg-white p-3 rounded-lg shadow border border-[#006A71]"
+                  className="bg-white p-3 rounded-lg shadow border border-[#64A65F]"
                 >
                   <p className="text-black">
                     <strong>Doctor:</strong> {a.doctorName}
                   </p>
                   <p className="text-black">
-                    <strong>Date:</strong>{' '}
-                    {new Date(a.dateTime).toLocaleString()}
+                    <strong>Date:</strong> {new Date(a.dateTime).toLocaleString()}
                   </p>
+                  <p className="text-black">
+                <strong>Description:</strong> {latest.description}
+              </p>
                   <p className="text-black">
                     <strong>Status:</strong>{' '}
                     <span
                       className={`capitalize font-semibold ${
                         {
-                          pending: 'text-[#006A71]',
+                          pending: 'text-[#64A65F]',
                           accepted: 'text-black',
                           rejected: 'text-red-600',
                           completed: 'text-gray-500',
@@ -244,7 +259,7 @@ export default function BookAppointment() {
                         href={a.meetingLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block px-3 py-1 bg-[#006A71] text-white rounded hover:bg-black transition"
+                        className="inline-block px-3 py-1 bg-[#64A65F] text-white rounded hover:bg-[#4B8C47] transition"
                       >
                         Join Video Call
                       </Link>
@@ -256,14 +271,14 @@ export default function BookAppointment() {
           )}
         </aside>
 
-        <main className="flex-1">
-          <div className="bg-white p-6 rounded-lg shadow">
+        {/* Main Content */}
+        <main className="flex-1 flex items-center justify-center py-8 px-6">
+          <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
             <h2 className="text-3xl font-bold mb-6 text-black text-center">
               Schedule Your Visit
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-             
               <div>
                 <label
                   htmlFor="patientName"
@@ -276,13 +291,12 @@ export default function BookAppointment() {
                   type="text"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
-                  className="w-full p-2 border border-black rounded text-[#006A71]"
+                  className="w-full p-2 border border-black rounded text-[#64A65F]"
                   placeholder="Enter your full name"
                   required
                 />
               </div>
 
-          
               <div>
                 <label
                   htmlFor="doctor"
@@ -294,7 +308,7 @@ export default function BookAppointment() {
                   id="doctor"
                   value={selectedDoctorId}
                   onChange={(e) => setSelectedDoctorId(e.target.value)}
-                  className="w-full p-2 border border-black rounded text-[#006A71]"
+                  className="w-full p-2 border border-black rounded text-[#64A65F]"
                   required
                 >
                   <option value="" disabled>
@@ -308,7 +322,6 @@ export default function BookAppointment() {
                 </select>
               </div>
 
-            
               <div>
                 <label
                   htmlFor="mode"
@@ -320,14 +333,13 @@ export default function BookAppointment() {
                   id="mode"
                   value={mode}
                   onChange={(e) => setMode(e.target.value)}
-                  className="w-full p-2 border border-black rounded text-[#006A71]"
+                  className="w-full p-2 border border-black rounded text-[#64A65F]"
                 >
                   <option value="video">Video Consultation</option>
-                  <option value="in-person">In‑Person Visit</option>
+                  <option value="in-person">In-Person Visit</option>
                 </select>
               </div>
 
-      
               <div>
                 <label
                   htmlFor="cause"
@@ -339,13 +351,12 @@ export default function BookAppointment() {
                   id="cause"
                   value={cause}
                   onChange={(e) => setCause(e.target.value)}
-                  className="w-full p-2 border border-black rounded text-[#006A71]"
+                  className="w-full p-2 border border-black rounded text-[#64A65F]"
                   rows={3}
                   placeholder="Describe your symptoms..."
                 />
               </div>
 
-     
               <div>
                 <label
                   htmlFor="datetime"
@@ -358,14 +369,14 @@ export default function BookAppointment() {
                   type="datetime-local"
                   value={dateTime}
                   onChange={(e) => setDateTime(e.target.value)}
-                  className="w-full p-2 border border-black rounded text-[#006A71]"
+                  className="w-full p-2 border border-black rounded text-[#64A65F]"
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2 bg-[#006A71] text-white rounded hover:bg-black transition"
+                className="w-full py-2 bg-[#64A65F] text-white rounded hover:bg-[#4B8C47] transition"
               >
                 Confirm Appointment
               </button>

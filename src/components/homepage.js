@@ -1,3 +1,4 @@
+
 'use client'
 import React, { useEffect, useState } from 'react'
 import { Typewriter } from 'react-simple-typewriter'
@@ -47,35 +48,38 @@ export default function Homepage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center text-center px-6 relative overflow-hidden"
+      className="min-h-screen flex flex-col items-start justify-center text-left px-6 md:px-12 relative overflow-hidden"
       style={{
-        background: 'linear-gradient(120deg, #F2EFE7, #9ACBD0, #48A6A7, #006A71)',
+        backgroundImage: "url('/home.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         transition: 'background 0.5s ease-in-out',
       }}
     >
       <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-transparent via-[#48A6A7] to-transparent opacity-40"
+        className="absolute inset-0 bg-gradient-to-br from-transparent via-[#5BAF54] to-transparent opacity-40"
         animate={{ scale: [1, 1.05, 1] }}
         transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
       />
 
       <motion.h1
-        className="text-4xl md:text-6xl font-extrabold text-[#006A71] relative z-10"
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
+        className="text-4xl md:text-6xl font-extrabold text-[#5BAF54] relative z-10"
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1 }}
       >
         Welcome to{' '}
-        <span className="text-[#006A71] font-mono">
+        <span className="text-[#5BAF54] font-mono">
           <Typewriter words={['AetherCare']} loop={false} cursor cursorStyle="|" delaySpeed={3000} />
-        </span><br></br>
-        Your trusted AI-powered health companion.
+        </span><br />
+        Your trusted AI-powered <br />health companion.
       </motion.h1>
 
       <motion.p
-        className="text-lg md:text-xl text-[#006A71] mt-6 max-w-2xl relative z-10"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
+        className="text-lg md:text-xl text-[#5BAF54] mt-6 max-w-2xl relative z-10"
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1, delay: 0.5 }}
       >
         We're here to guide you through your symptoms and provide insightful diagnosis and advice, all at your fingertips.
@@ -83,39 +87,40 @@ export default function Homepage() {
 
       <motion.div
         className="mt-8 flex flex-col md:flex-row gap-6 relative z-10"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1, delay: 1 }}
       >
-        <div className="flex flex-wrap justify-center gap-4">
+        
+        <div className="flex flex-wrap gap-4">
           <Link href="/diagnosis">
-            <button className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#006A71] to-[#48A6A7] shadow-lg hover:from-[#006A71] hover:to-[#9ACBD0] transition transform hover:scale-105">
+            <button className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#5BAF54] to-[#488F43] shadow-lg hover:from-[#5BAF54] hover:to-[#6EC465] transition transform hover:scale-105">
               Get Diagnosis
             </button>
           </Link>
           <Link href="/location_docs">
-            <button className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#48A6A7] to-[#9ACBD0] shadow-lg hover:from-[#48A6A7] hover:to-[#006A71] transition transform hover:scale-105">
+            <button className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#488F43] to-[#6EC465] shadow-lg hover:from-[#488F43] hover:to-[#5BAF54] transition transform hover:scale-105">
               Search Doctors
             </button>
           </Link>
           <button
             onClick={handleConsultationClick}
-            className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#48A6A7] to-[#9ACBD0] shadow-lg hover:from-[#48A6A7] hover:to-[#006A71] transition transform hover:scale-105"
+            className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#488F43] to-[#6EC465] shadow-lg hover:from-[#488F43] hover:to-[#5BAF54] transition transform hover:scale-105"
           >
             Consultation
           </button>
           
-          <button className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#9ACBD0] to-[#006A71] shadow-lg hover:from-[#9ACBD0] hover:to-[#48A6A7] transition transform hover:scale-105">
-          <Link href="/ambulance">
-            SOS Ambulance
+          <button className="px-8 py-4 text-lg cursor-pointer font-mono rounded-full text-white bg-gradient-to-r from-[#6EC465] to-[#5BAF54] shadow-lg hover:from-[#6EC465] hover:to-[#488F43] transition transform hover:scale-105">
+            <Link href="/ambulance">
+              SOS Ambulance
             </Link>
           </button>
-          
         </div>
-      </motion.div>
+       
+      </motion.div> 
 
       <motion.div
-        className="absolute bottom-10 w-16 h-16 bg-[#006A71] rounded-full opacity-50"
+        className="absolute bottom-10 w-16 h-16 bg-[#5BAF54] rounded-full opacity-50"
         animate={{ y: [0, 15, 0] }}
         transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
       />

@@ -46,7 +46,7 @@ def get_nearby_ambulance_services():
         url = (
             f'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
             f'?location={lat},{lng}'
-            f'&radius=5000'
+            f'&radius=10000'
             f'&keyword=ambulance'
             f'&key={GOOGLE_MAPS_API_KEY}'
         )

@@ -30,7 +30,7 @@ export default function Home() {
           <h1 className="text-3xl font-bold text-black mb-4">
             Welcome to AetherCare
           </h1>
-          <p className="text-[#006A71] mb-4">
+          <p className="text-[#859F3D] mb-4">
             Start a video call by creating a new room. Share the link with others
             to join!
           </p>
@@ -40,7 +40,7 @@ export default function Home() {
 
           <button
             onClick={createRoom}
-            className="px-6 py-3 bg-gradient-to-r from-[#006A71] to-black text-white rounded-full hover:from-black hover:to-[#006A71] transition-colors duration-200 shadow-md text-lg font-medium"
+            className="px-6 py-3 bg-gradient-to-r from-[#859F3D] to-black text-white rounded-full hover:from-black hover:to-[#859F3D] transition-colors duration-200 shadow-md text-lg font-medium"
           >
             Create New Room
           </button>
@@ -48,7 +48,7 @@ export default function Home() {
           {roomId && (
             <div className="mt-6 p-4 bg-[#F2EFE7] rounded-lg">
               <p className="text-black mb-2">Your room is ready! Redirecting...</p>
-              <p className="text-[#006A71] font-medium break-all">
+              <p className="text-[#859F3D] font-medium break-all">
                 {`${window.location.origin}/room/${roomId}`}
               </p>
             </div>

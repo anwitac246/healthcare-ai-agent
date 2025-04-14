@@ -1,10 +1,9 @@
-
 "use client";
 import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
 import { Menu, X } from "lucide-react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth, db } from "../app/firebase-config"; // Adjust path if needed
+import { auth, db } from "../app/firebase-config"; 
 import { ref, onValue } from "firebase/database";
 import { gsap } from "gsap";
 
@@ -89,12 +88,17 @@ export default function Navbar() {
   return (
     <nav
       ref={navRef}
-      className="fixed top-0 left-0 w-full bg-[#006A71]/90 z-50 backdrop-blur-md shadow-md py-4 flex justify-between items-center border-b border-[#9ACBD0]/20"
+      className="fixed top-0 left-0 w-full bg-gradient-to-r from-[#5BAF54]/80 to-[#488F43]/80 z-50 backdrop-blur-md shadow-md py-4 flex justify-between items-center border-b border-[#6EC465]/20"
     >
       {/* Logo */}
-      <h1 className="text-2xl md:text-3xl font-bold font-[Poppins] text-[#F2EFE7] pl-6 hover:text-[#48A6A7] transition">
-        <Link href="/" aria-label="AetherCare Home">
-          AetherCare
+      <h1 className="text-2xl md:text-3xl font-bold font-[Poppins] text-white pl-6 hover:text-[#6EC465] transition flex items-center space-x-2">
+        <Link href="/" aria-label="AetherCare Home" className="flex items-center space-x-2">
+          <img
+            src="/logo.png" // Ensure the logo.png file is in the public folder or adjust the path accordingly
+            alt="AetherCare Logo"
+            className="w-8 h-8 md:w-10 md:h-10 filter invert"
+          />
+          <span>AetherCare</span>
         </Link>
       </h1>
 
@@ -107,11 +111,11 @@ export default function Navbar() {
               <li key={index}>
                 <Link
                   href={item.href}
-                  className="text-[#F2EFE7] text-base font-[Inter] relative group transition"
+                  className="text-white text-base font-[Inter] relative group transition"
                   aria-label={item.label}
                 >
                   {item.label}
-                  <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-[#48A6A7] group-hover:w-full transition-all duration-300"></span>
+                  <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-[#6EC465] group-hover:w-full transition-all duration-300"></span>
                 </Link>
               </li>
             ))}
@@ -125,14 +129,14 @@ export default function Navbar() {
           <>
             <Link
               href="/profile"
-              className="bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-2 rounded-full font-[Inter] text-base shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition-all hover:shadow-lg"
+              className="bg-gradient-to-r from-[#5BAF54] to-[#488F43] text-white px-4 py-2 rounded-full font-[Inter] text-base shadow-md hover:from-[#5BAF54] hover:to-[#6EC465] transition-all hover:shadow-lg"
               aria-label="View profile"
             >
               Profile
             </Link>
             <button
               onClick={handleLogout}
-              className="bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-2 rounded-full font-[Inter] text-base shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition-all hover:shadow-lg"
+              className="bg-gradient-to-r from-[#5BAF54] to-[#488F43] text-white px-4 py-2 rounded-full font-[Inter] text-base shadow-md hover:from-[#5BAF54] hover:to-[#6EC465] transition-all hover:shadow-lg"
               aria-label="Log out"
             >
               Logout
@@ -141,7 +145,7 @@ export default function Navbar() {
         ) : (
           <Link
             href="/login"
-            className="bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-2 rounded-full font-[Inter] text-base shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition-all hover:shadow-lg"
+            className="bg-gradient-to-r from-[#5BAF54] to-[#488F43] text-white px-4 py-2 rounded-full font-[Inter] text-base shadow-md hover:from-[#5BAF54] hover:to-[#6EC465] transition-all hover:shadow-lg"
             aria-label="Log in"
           >
             Login
@@ -151,7 +155,7 @@ export default function Navbar() {
 
       {/* Mobile Toggle */}
       <button
-        className="md:hidden text-[#F2EFE7] pr-6"
+        className="md:hidden text-white pr-6"
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Close menu" : "Open menu"}
       >
@@ -162,7 +166,7 @@ export default function Navbar() {
       {isOpen && (
         <div
           ref={mobileMenuRef}
-          className="md:hidden fixed top-16 left-0 w-full h-[calc(100vh-4rem)] bg-[#F2EFE7]/95 backdrop-blur-lg shadow-xl border-t border-[#9ACBD0]/20 flex flex-col items-center justify-center"
+          className="md:hidden fixed top-16 left-0 w-full h-[calc(100vh-4rem)] bg-gradient-to-b from-[#5BAF54]/90 to-[#488F43]/90 backdrop-blur-lg shadow-xl border-t border-[#6EC465]/20 flex flex-col items-center justify-center"
         >
           {/* Centered Links */}
           <div className="flex justify-center mb-8">
@@ -171,7 +175,7 @@ export default function Navbar() {
                 <li key={index}>
                   <Link
                     href={item.href}
-                    className="text-[#006A71] text-lg font-[Inter] hover:text-[#48A6A7] transition"
+                    className="text-white text-lg font-[Inter] hover:text-[#6EC465] transition"
                     onClick={() => setIsOpen(false)}
                     aria-label={item.label}
                   >
@@ -188,7 +192,7 @@ export default function Navbar() {
               <>
                 <Link
                   href="/profile"
-                  className="w-full text-center bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-3 rounded-full font-[Inter] text-base shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition-all hover:shadow-lg"
+                  className="w-full text-center bg-gradient-to-r from-[#5BAF54] to-[#488F43] text-white px-4 py-3 rounded-full font-[Inter] text-base shadow-md hover:from-[#5BAF54] hover:to-[#6EC465] transition-all hover:shadow-lg"
                   onClick={() => setIsOpen(false)}
                   aria-label="View profile"
                 >
@@ -196,7 +200,7 @@ export default function Navbar() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-full bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-3 rounded-full font-[Inter] text-base shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition-all hover:shadow-lg"
+                  className="w-full bg-gradient-to-r from-[#5BAF54] to-[#488F43] text-white px-4 py-3 rounded-full font-[Inter] text-base shadow-md hover:from-[#5BAF54] hover:to-[#6EC465] transition-all hover:shadow-lg"
                   aria-label="Log out"
                 >
                   Logout
@@ -205,7 +209,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="w-full text-center bg-gradient-to-r from-[#9ACBD0] to-[#48A6A7] text-[#F2EFE7] px-4 py-3 rounded-full font-[Inter] text-base shadow-md hover:from-[#48A6A7] hover:to-[#006A71] transition-all hover:shadow-lg"
+                className="w-full text-center bg-gradient-to-r from-[#5BAF54] to-[#488F43] text-white px-4 py-3 rounded-full font-[Inter] text-base shadow-md hover:from-[#5BAF54] hover:to-[#6EC465] transition-all hover:shadow-lg"
                 onClick={() => setIsOpen(false)}
                 aria-label="Log in"
               >
