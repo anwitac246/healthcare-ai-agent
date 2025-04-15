@@ -89,7 +89,7 @@ export default function AmbulancePage() {
   async function fetchServices(lat, lng) {
     console.log("Fetching services for lat/lng:", lat, lng);
     try {
-      const res = await fetch("http://localhost:7000/nearby-ambulance-services", {
+      const res = await fetch("http://localhost:3002/nearby-ambulance-services", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lat, lng }),
@@ -121,7 +121,7 @@ export default function AmbulancePage() {
   async function confirmCall() {
     setCallStage("calling");
     try {
-      const res = await fetch("http://localhost:7000/call-ambulance", {
+      const res = await fetch("http://localhost:3002/call-ambulance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

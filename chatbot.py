@@ -231,4 +231,4 @@ def classify_endpoint():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, port=7000)
+    app.run(debug=True, port=3001)

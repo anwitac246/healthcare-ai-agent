@@ -1,5 +1,6 @@
 
 'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import Navbar from '@/components/navbar';
@@ -20,6 +21,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ref, push, set, onValue } from 'firebase/database';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { jsPDF } from 'jspdf';
 
 export default function Diagnosis() {
   const router = useRouter();
@@ -149,9 +151,7 @@ export default function Diagnosis() {
     };
 
     utterance.onerror = (event) => {
-      // Avoid error message for intentional cancellation
       if (event.error === 'interrupted' || event.error === 'not-allowed') {
-        // Silently handle cancellation or interruption
         setIsSpeaking(false);
         setSpeakingMessageIndex(null);
       } else {
@@ -190,12 +190,10 @@ export default function Diagnosis() {
   const handleSpeakMessage = (content, index) => {
     const cleanText = content.replace(/\*\*(.*?)\*\*/g, '$1').replace(/## (.*?)\n/g, '$1. ');
     if (speakingMessageIndex === index && isSpeaking) {
-      // Stop speaking
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
       setSpeakingMessageIndex(null);
     } else {
-      // Start speaking from the beginning
       speakText(cleanText, index);
     }
   };
@@ -296,7 +294,7 @@ export default function Diagnosis() {
       .join('\n\n');
 
     try {
-      const { data } = await axios.post('http://localhost:7000/chat', {
+      const { data } = await axios.post('http://localhost:3001/chat', {
         message: historyToSend,
       });
 
@@ -325,7 +323,7 @@ export default function Diagnosis() {
       }
 
       if (data.confidence >= 80) {
-        generateMDReport(
+        generatePDFReport(
           user.displayName,
           user.email,
           user.dob,
@@ -375,7 +373,7 @@ export default function Diagnosis() {
 
     try {
       const { data } = await axios.post(
-        'http://localhost:5000/diagnosis',
+        'http://localhost:3003/diagnosis',
         form,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
@@ -418,18 +416,67 @@ export default function Diagnosis() {
     }
   };
 
-  const generateMDReport = (name, email, dob, diag, conf) => {
-    let md = `# Diagnosis Report\n\n**Name:** ${name || '___'}\n\n**Email:** ${email || '___'}\n\n`;
-    md += dob ? `**Age:** ${calculateAge(dob)}\n\n` : '**Age:** ___\n\n';
-    md += `## Diagnosis:\n\n${diag}\n\n**Confidence:** ${conf}%\n`;
-    const blob = new Blob([md], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'report.md';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  const generatePDFReport = (name, email, dob, diag, conf) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const maxWidth = pageWidth - 2 * margin;
+    let y = margin;
+
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(0, 100, 0);
+    doc.text('Diagnosis Report', margin, y);
+    y += 15;
+
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(100, 166, 95); 
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0); 
+    doc.text(`Name: ${name || 'Unknown'}`, margin, y);
+    y += 10;
+    doc.text(`Email: ${email || 'Unknown'}`, margin, y);
+    y += 10;
+    doc.text(`Age: ${dob ? calculateAge(dob) : 'Unknown'}`, margin, y);
+    y += 15;
+
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(0, 100, 0);
+    doc.text('Diagnosis:', margin, y);
+    y += 10;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+
+    const diagLines = doc.splitTextToSize(diag, maxWidth);
+    diagLines.forEach(line => {
+      if (y + 10 > doc.internal.pageSize.getHeight() - margin) {
+        doc.addPage();
+        y = margin;
+      }
+      doc.text(line, margin, y);
+      y += 7;
+    });
+    y += 10;
+
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Confidence: ${conf}%`, margin, y);
+
+    const date = new Date().toLocaleDateString();
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generated on: ${date}`, margin, doc.internal.pageSize.getHeight() - margin);
+
+
+    doc.save('report.pdf');
   };
 
   const loadChatHistory = history => {
@@ -487,23 +534,19 @@ export default function Diagnosis() {
             <FaBars />
           </button>
         )}
-        
-        
+
         <div className="flex-1 flex flex-col ml-[250px] border-l border-[#A8D5A2]">
-        
-
-        <div
-  ref={chatContainerRef}
-  className="relative flex-1 overflow-y-auto p-6 space-y-4 min-h-0 h-300"
->
-
-  <div
-    className="absolute inset-0 bg-center bg-no-repeat bg-cover h-200"
-    style={{
-      backgroundImage: "url('/bg.png')",
-      opacity: 0.3,
-    }}
-  />
+          <div
+            ref={chatContainerRef}
+            className="relative flex-1 overflow-y-auto p-6 space-y-4 min-h-0 h-300"
+          >
+            <div
+              className="absolute inset-0 bg-center bg-repeat bg-cover h-200"
+              style={{
+                backgroundImage: "url('/bg.png')",
+                opacity: 0.3,
+              }}
+            />
 
             <div className="relative space-y-4">
               <AnimatePresence initial={false}>

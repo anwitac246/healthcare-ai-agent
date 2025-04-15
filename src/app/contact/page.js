@@ -5,21 +5,24 @@ import Link from "next/link";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "@/components/navbar";
+import emailjs from "emailjs-com";
 
-// Register GSAP ScrollTrigger
+
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Contact() {
-  // GSAP refs for animations
+
   const heroRef = useRef(null);
   const cardsRef = useRef([]);
   const formRef = useRef(null);
-  const statusRef = useRef(null);
 
-  // Form state
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
-  const [status, setStatus] = useState(null); // null, 'success', 'error'
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const [status, setStatus] = useState("");
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     // Hero animation: fade-in and slide-up
@@ -62,66 +65,65 @@ export default function Contact() {
       }
     );
 
-    // Status message animation: fade-in on change
-    if (status) {
-      gsap.fromTo(
-        statusRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }
-      );
-    }
-
     // Cleanup ScrollTriggers on unmount
     return () => {
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
-  }, [status]);
+  }, []);
 
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+    setErrors({ ...errors, [e.target.name]: "" });
   };
 
   const validateForm = () => {
-    if (!formData.name.trim()) return "Name is required.";
-    if (!formData.email.trim()) return "Email is required.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      return "Invalid email format.";
-    if (!formData.message.trim()) return "Message is required.";
-    return null;
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email address";
+    if (!formData.message.trim()) newErrors.message = "Message is required";
+    return newErrors;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setStatus(null);
-    setIsSubmitting(true);
 
-    const error = validateForm();
-    if (error) {
-      setStatus({ type: "error", message: error });
-      setIsSubmitting(false);
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setStatus("");
       return;
     }
 
-    try {
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+    const templateParams = {
+      from_name: formData.name,
+      from_email: formData.email,
+      message: formData.message,
+      to_name: "AetherCare Team",
+    };
 
-      if (response.ok) {
-        setStatus({ type: "success", message: "Message sent successfully!" });
-        setFormData({ name: "", email: "", message: "" });
-      } else {
-        const data = await response.json();
-        setStatus({ type: "error", message: data.error || "Failed to send message." });
-      }
-    } catch (err) {
-      setStatus({ type: "error", message: "An error occurred. Please try again." });
-    } finally {
-      setIsSubmitting(false);
-    }
+    emailjs
+      .send(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "YOUR_SERVICE_ID",
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "YOUR_TEMPLATE_ID",
+        templateParams,
+        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || "YOUR_PUBLIC_KEY"
+      )
+      .then(
+        (result) => {
+          console.log("Email successfully sent:", result.text);
+          setStatus("Message sent successfully!");
+          setFormData({ name: "", email: "", message: "" });
+          setErrors({});
+        },
+        (error) => {
+          console.error("Email sending error:", error.text);
+          setStatus("Failed to send message. Please try again.");
+        }
+      );
   };
 
   const contactItems = [
@@ -187,13 +189,16 @@ export default function Contact() {
 
   return (
     <div className="font-sans bg-[#F5F5F5] text-[#64A65F]">
+      {/* Sticky Header */}
       <Navbar />
+
       <main>
         {/* Hero Section */}
         <section
           ref={heroRef}
           className="relative py-24 px-6 text-center bg-gradient-to-b from-[#A8D5A2]/20 to-[#F5F5F5] overflow-hidden"
         >
+          {/* Wave Background */}
           <div className="absolute inset-0 z-0">
             <svg
               className="w-full h-full opacity-10"
@@ -251,66 +256,71 @@ export default function Contact() {
             <h2 className="text-2xl md:text-3xl font-bold font-[Poppins] text-center text-[#64A65F] mb-8">
               Send Us a Message
             </h2>
-            {status && (
-              <div
-                ref={statusRef}
-                className={`text-center mb-6 p-4 rounded-lg ${
-                  status.type === "success"
-                    ? "bg-green-100 text-[#64A65F]"
-                    : "bg-red-100 text-red-600"
-                }`}
-              >
-                {status.message}
-              </div>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
               <div className="relative">
                 <input
                   type="text"
                   id="name"
+                  name="name"
                   value={formData.name}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   placeholder="Your Name"
-                  className="w-full px-4 py-3 bg-[#F5F5F5] border border-[#A8D5A2] rounded-lg focus:ring-2 focus:ring-[#4B8C47] focus:border-transparent text-[#64A65F] transition-all"
+                  className={`w-full px-4 py-3 bg-[#F5F5F5] border ${
+                    errors.name ? "border-red-500" : "border-[#A8D5A2]"
+                  } rounded-lg focus:ring-2 focus:ring-[#4B8C47] focus:border-transparent text-[#64A65F] transition-all`}
                   aria-label="Your name"
                   required
-                  disabled={isSubmitting}
                 />
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
               </div>
               <div className="relative">
                 <input
                   type="email"
                   id="email"
+                  name="email"
                   value={formData.email}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   placeholder="Your Email"
-                  className="w-full px-4 py-3 bg-[#F5F5F5] border border-[#A8D5A2] rounded-lg focus:ring-2 focus:ring-[#4B8C47] focus:border-transparent text-[#64A65F] transition-all"
+                  className={`w-full px-4 py-3 bg-[#F5F5F5] border ${
+                    errors.email ? "border-red-500" : "border-[#A8D5A2]"
+                  } rounded-lg focus:ring-2 focus:ring-[#4B8C47] focus:border-transparent text-[#64A65F] transition-all`}
                   aria-label="Your email"
                   required
-                  disabled={isSubmitting}
                 />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               </div>
               <div className="relative">
                 <textarea
                   id="message"
+                  name="message"
                   value={formData.message}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   placeholder="Your Message"
                   rows={5}
-                  className="w-full px-4 py-3 bg-[#F5F5F5] border border-[#A8D5A2] rounded-lg focus:ring-2 focus:ring-[#4B8C47] focus:border-transparent text-[#64A65F] transition-all"
+                  className={`w-full px-4 py-3 bg-[#F5F5F5] border ${
+                    errors.message ? "border-red-500" : "border-[#A8D5A2]"
+                  } rounded-lg focus:ring-2 focus:ring-[#4B8C47] focus:border-transparent text-[#64A65F] transition-all`}
                   aria-label="Your message"
                   required
-                  disabled={isSubmitting}
-                ></textarea>
+                />
+                {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message}</p>}
               </div>
+              {status && (
+                <p
+                  className={`text-center ${
+                    status.includes("successfully") ? "text-[#64A65F]" : "text-red-500"
+                  }`}
+                >
+                  {status}
+                </p>
+              )}
               <div className="text-center">
                 <button
                   type="submit"
-                  className="px-8 py-4 bg-[#64A65F] text-[#F5F5F5] font-semibold font-[Poppins] rounded-full shadow-lg hover:bg-[#4B8C47] transition-all hover:shadow-xl focus:ring-2 focus:ring-[#4B8C47] disabled:bg-[#A8D5A2] disabled:cursor-not-allowed"
+                  className="px-8 py-4 bg-[#64A65F] text-[#F5F5F5] font-semibold font-[Poppins] rounded-full shadow-lg hover:bg-[#4B8C47] transition-all hover:shadow-xl focus:ring-2 focus:ring-[#4B8C47]"
                   aria-label="Submit contact form"
-                  disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Sending..." : "Send Message"}
+                  Send Message
                 </button>
               </div>
             </form>
@@ -321,27 +331,25 @@ export default function Contact() {
       {/* Footer */}
       <footer className="bg-[#64A65F] text-[#F5F5F5] py-8">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-base">
-            © {new Date().getFullYear()} AetherCare. All rights reserved.
-          </p>
+          <p className="text-base">© {new Date().getFullYear()} AetherCare. All rights reserved.</p>
           <div className="mt-4 space-x-4">
             <Link
               href="/about"
-              className="text-[#F5F5F5] hover:text-[#A8D5A2] transition"
+              className="text-[#F5F5F5] hover:text-[#4B8C47] transition"
               aria-label="About page"
             >
               About
             </Link>
             <Link
               href="/contact"
-              className="text-[#F5F5F5] hover:text-[#A8D5A2] transition"
+              className="text-[#F5F5F5] hover:text-[#4B8C47] transition"
               aria-label="Contact page"
             >
               Contact
             </Link>
             <Link
               href="/privacy"
-              className="text-[#F5F5F5] hover:text-[#A8D5A2] transition"
+              className="text-[#F5F5F5] hover:text-[#4B8C47] transition"
               aria-label="Privacy policy"
             >
               Privacy Policy

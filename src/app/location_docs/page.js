@@ -117,7 +117,7 @@ export default function NearbyDoctors() {
   const fetchDoctors = (lat, lng, text = "") => {
     setLoading(true);
     setError("");
-    fetch("http://localhost:5000/nearby-doctors", {
+    fetch("http://localhost:3004/nearby-doctors", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(
