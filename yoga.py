@@ -306,7 +306,7 @@ def health_check():
     return jsonify({'status': 'Backend is running'}), 200
 
 if __name__ == '__main__':
-    ports = [3001, 8080]  # Try 3001, fallback to 8080
+    ports = [8080]  # Try 3001, fallback to 8080
     server_started = False
     for port in ports:
         try:

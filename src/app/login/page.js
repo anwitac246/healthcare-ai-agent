@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -15,7 +14,7 @@ import SHA256 from "crypto-js/sha256";
 import Navbar from "@/components/navbar";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { FaGoogle, FaUser, FaLock, FaCalendarAlt, FaBriefcaseMedical } from "react-icons/fa";
+import { FaGoogle, FaUser, FaLock, FaCalendarAlt, FaBriefcaseMedical, FaHeartbeat, FaUserMd, FaHospital } from "react-icons/fa";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -28,7 +27,6 @@ export default function Login() {
   const [needExtraInfo, setNeedExtraInfo] = useState(false);
   const [userRecord, setUserRecord] = useState(null);
 
-  // Form fields
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
   const [role, setRole] = useState("patient");
@@ -37,42 +35,42 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // GSAP refs
   const containerRef = useRef(null);
   const formRef = useRef(null);
+  const leftPanelRef = useRef(null);
 
   useEffect(() => {
-    // Form container animation: fade-in and slide-up
+ 
     gsap.fromTo(
-      containerRef.current,
-      { opacity: 0, y: 50 },
-      { opacity: 1, y: 0, duration: 1, ease: "power3.out" }
+      leftPanelRef.current,
+      { opacity: 0, x: -50 },
+      { opacity: 1, x: 0, duration: 1, ease: "power3.out" }
     );
 
-    // Form inputs animation: stagger fade-in
     gsap.fromTo(
-      formRef.current.querySelectorAll(".form-field"),
+      containerRef.current,
+      { opacity: 0, x: 50 },
+      { opacity: 1, x: 0, duration: 1, ease: "power3.out", delay: 0.2 }
+    );
+
+    gsap.fromTo(
+      formRef.current?.querySelectorAll(".form-field") || [],
       { opacity: 0, y: 20 },
       {
         opacity: 1,
         y: 0,
         duration: 0.6,
-        stagger: 0.2,
+        stagger: 0.1,
         ease: "power3.out",
-        scrollTrigger: {
-          trigger: formRef.current,
-          start: "top 80%",
-        },
+        delay: 0.5,
       }
     );
 
-    // Cleanup ScrollTriggers on unmount
     return () => {
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, [isSignUp, needExtraInfo]);
 
-  // SIGN-UP handler
   const handleSignUp = async (e) => {
     e.preventDefault();
     setError("");
@@ -103,7 +101,7 @@ export default function Login() {
     }
   };
 
-  // LOGIN handler
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -140,7 +138,7 @@ export default function Login() {
     }
   };
 
-  // GOOGLE handler
+ 
   const handleGoogle = async () => {
     setError("");
     try {
@@ -176,7 +174,6 @@ export default function Login() {
     }
   };
 
-  // Extra-info form submit
   const handleExtraInfo = async (e) => {
     e.preventDefault();
     setError("");
@@ -211,27 +208,64 @@ export default function Login() {
     }
   };
 
-  // Extra Info Form
   if (needExtraInfo) {
     return (
-      <div className="min-h-screen bg-[#F5F5F5] flex flex-col relative overflow-hidden">
+      <div className="min-h-screen flex">
         <Navbar />
-        {/* Background Wave Pattern */}
-        <div className="absolute inset-0 z-0 opacity-10">
-          <svg
-            className="w-full h-full"
-            viewBox="0 0 1440 320"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              fill="#A8D5A2"
-              d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1360,160L1440,160L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
-            />
-          </svg>
+     
+        <div ref={leftPanelRef} className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#2D4A3D] to-[#1F3329] relative overflow-hidden">
+        
+          <div className="absolute inset-0 opacity-10">
+            <svg className="w-full h-full" viewBox="0 0 100 100" fill="none">
+              <defs>
+                <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#A8D5A2" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100" height="100" fill="url(#grid)" />
+            </svg>
+          </div>
+          
+          <div className="flex flex-col justify-center items-center text-center p-12 relative z-10">
+            <div className="flex items-center space-x-3 mb-8">
+              <FaHeartbeat className="text-4xl text-[#A8D5A2]" />
+              <h1 className="text-4xl font-bold text-white font-[Poppins]">AetherCare</h1>
+            </div>
+            
+            <p className="text-xl text-[#A8D5A2] mb-6 leading-relaxed max-w-md">
+              Your comprehensive healthcare companion, providing all-in-one medical facilities and personalized care solutions.
+            </p>
+            
+            <div className="flex space-x-8 text-[#A8D5A2]">
+              <div className="flex flex-col items-center">
+                <FaUserMd className="text-2xl mb-2" />
+                <span className="text-sm">Expert Doctors</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <FaHospital className="text-2xl mb-2" />
+                <span className="text-sm">Complete Care</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <FaHeartbeat className="text-2xl mb-2" />
+                <span className="text-sm">24/7 Support</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div ref={containerRef} className="flex items-center justify-center flex-1 z-10">
-          <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl p-8 max-w-md w-full border border-[#A8D5A2]/50">
+
+        {/* Right Panel - Light */}
+        <div className="w-full md:w-1/2 bg-[#F5F5F5] flex items-center justify-center relative">
+          {/* Background Wave Pattern */}
+          <div className="absolute inset-0 z-0 opacity-10">
+            <svg className="w-full h-full" viewBox="0 0 1440 320" fill="none">
+              <path
+                fill="#A8D5A2"
+                d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1360,160L1440,160L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
+              />
+            </svg>
+          </div>
+          
+          <div ref={containerRef} className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl p-8 max-w-md w-full mx-4 border border-[#A8D5A2]/50 z-10">
             <h2 className="text-3xl font-bold mb-6 text-center text-[#64A65F] font-[Poppins]">
               Complete Your Profile
             </h2>
@@ -318,26 +352,64 @@ export default function Login() {
     );
   }
 
-  // Login/Sign-Up Form
   return (
-    <div className="min-h-screen bg-[#F5F5F5] flex flex-col relative overflow-hidden">
+    <div className="min-h-screen flex">
       <Navbar />
-      {/* Background Wave Pattern */}
-      <div className="absolute inset-0 z-0 opacity-10">
-        <svg
-          className="w-full h-full"
-          viewBox="0 0 1440 320"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fill="#A8D5A2"
-            d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1360,160L1440,160L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
-          />
-        </svg>
+      
+   
+      <div ref={leftPanelRef} className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#2D4A3D] to-[#1F3329] relative overflow-hidden">
+    
+        <div className="absolute inset-0 opacity-10">
+          <svg className="w-full h-full" viewBox="0 0 100 100" fill="none">
+            <defs>
+              <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#A8D5A2" strokeWidth="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100" height="100" fill="url(#grid)" />
+          </svg>
+        </div>
+        
+        <div className="flex flex-col justify-center items-center text-center p-12 relative z-10">
+          <div className="flex items-center space-x-3 mb-8">
+            <FaHeartbeat className="text-4xl text-[#A8D5A2]" />
+            <h1 className="text-4xl font-bold text-white font-[Poppins]">AetherCare</h1>
+          </div>
+          
+          <p className="text-xl text-[#A8D5A2] mb-6 leading-relaxed max-w-md">
+            Your comprehensive healthcare companion, providing all-in-one medical facilities and personalized care solutions.
+          </p>
+          
+          <div className="flex space-x-8 text-[#A8D5A2]">
+            <div className="flex flex-col items-center">
+              <FaUserMd className="text-2xl mb-2" />
+              <span className="text-sm">Expert Doctors</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <FaHospital className="text-2xl mb-2" />
+              <span className="text-sm">Complete Care</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <FaHeartbeat className="text-2xl mb-2" />
+              <span className="text-sm">24/7 Support</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div ref={containerRef} className="flex items-center justify-center flex-1 z-10">
-        <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl p-8 max-w-md w-full border border-[#A8D5A2]/50">
+
+     
+      <div className="w-full md:w-1/2 bg-[#F5F5F5] flex items-center justify-center relative">
+     
+        <div className="absolute inset-0 z-0 opacity-10">
+          <svg className="w-full h-full" viewBox="0 0 1440 320" fill="none">
+            <path
+              fill="#A8D5A2"
+              d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1360,160L1440,160L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
+            />
+          </svg>
+        </div>
+        
+        <div ref={containerRef} className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl p-8 max-w-md w-full mx-4 border border-[#A8D5A2]/50 z-10">
           <h2 className="text-3xl font-bold mb-6 text-center text-[#64A65F] font-[Poppins]">
             {isSignUp ? "Create Account" : "Welcome Back"}
           </h2>

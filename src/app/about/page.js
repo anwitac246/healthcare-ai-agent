@@ -183,23 +183,10 @@ export default function About() {
               Your well‑being is at the heart of everything we do.
             </p>
           </motion.div>
-          <motion.div
-            className="md:w-1/2"
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 1 }}
-          >
-            <img
-              src="/about-commitment.jpg"
-              alt="Our Commitment"
-              className="w-full rounded-lg shadow-lg"
-            />
-          </motion.div>
+          
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="bg-[#5BAF54] text-white py-8">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-base">

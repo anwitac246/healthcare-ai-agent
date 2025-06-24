@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -135,7 +134,7 @@ export default function DoctorProfile() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-[#64A65F]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-[#2D5A2B]"></div>
       </div>
     );
   }
@@ -211,7 +210,7 @@ export default function DoctorProfile() {
               placeholder="Search patients..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full p-3 pl-10 border border-gray-200 rounded-lg text-gray-800 focus:ring-2 focus:ring-[#64A65F] focus:outline-none transition"
+              className="w-full p-3 pl-10 border border-gray-200 rounded-lg text-gray-800 focus:ring-2 focus:ring-[#2D5A2B] focus:outline-none transition"
               aria-label="Search patients"
             />
             
@@ -254,7 +253,7 @@ export default function DoctorProfile() {
                       </h3>
                       <span
                         className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold capitalize ${{
-                          pending: 'bg-[#64A65F]/20 text-[#64A65F]',
+                          pending: 'bg-[#2D5A2B]/20 text-[#2D5A2B]',
                           accepted: 'bg-blue-100 text-blue-600',
                           rejected: 'bg-red-100 text-red-600',
                           completed: 'bg-gray-100 text-gray-500',
@@ -269,15 +268,15 @@ export default function DoctorProfile() {
                     </div>
                     <div className="space-y-3 text-gray-600">
                       <p className="flex items-center">
-                        <FaCalendarAlt className="mr-2 text-[#64A65F]" />
+                        <FaCalendarAlt className="mr-2 text-[#2D5A2B]" />
                         <span>{new Date(appt.dateTime).toLocaleString()}</span>
                       </p>
                       <p className="flex items-center">
-                        <FaUser className="mr-2 text-[#64A65F]" />
+                        <FaUser className="mr-2 text-[#2D5A2B]" />
                         <span>Patient: {appt.patientName}</span>
                       </p>
                       <p className="flex items-center">
-                        <FaUser className="mr-2 text-[#64A65F]" />
+                        <FaUser className="mr-2 text-[#2D5A2B]" />
                         <span>Description: {appt.description}</span>
                       </p>
                       {appt.status === 'accepted' && (
@@ -287,7 +286,7 @@ export default function DoctorProfile() {
                               href={appt.meetingLink}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center px-4 py-2 bg-[#64A65F] text-white rounded-lg font-semibold hover:bg-[#4B8C47] transition-transform hover:scale-105 shadow-md"
+                              className="inline-flex items-center px-4 py-2 bg-[#2D5A2B] text-white rounded-lg font-semibold hover:bg-[#1F3F1E] transition-transform hover:scale-105 shadow-md"
                               aria-label="Join Meeting"
                             >
                               <FaVideo className="mr-2" />
@@ -306,7 +305,7 @@ export default function DoctorProfile() {
                       <div className="mt-6 flex gap-4">
                         <button
                           onClick={() => handleAction(appt, 'accept')}
-                          className="flex-1 py-2 px-4 bg-[#64A65F] text-white rounded-lg font-semibold hover:bg-[#4B8C47] transition-transform hover:scale-105 shadow-md"
+                          className="flex-1 py-2 px-4 bg-[#2D5A2B] text-white rounded-lg font-semibold hover:bg-[#1F3F1E] transition-transform hover:scale-105 shadow-md"
                           aria-label="Accept Appointment"
                         >
                           Accept
@@ -327,7 +326,7 @@ export default function DoctorProfile() {
           </div>
         )}
       </div>
-      <footer className="bg-[#64A65F] text-white py-8 mt-auto">
+      <footer className="bg-[#2D5A2B] text-white py-8 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-base">
             © {new Date().getFullYear()} AetherCare. All rights reserved.
